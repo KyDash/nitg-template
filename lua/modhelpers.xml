@@ -1,0 +1,81 @@
+<Layer Type="ActorFrame" InitCommand="%m_prefix(function(self)
+if init then init = nil return end -- prevent init frum running twice
+init = true
+
+	math.clamp = function(val, min, max)
+		return math.min( math.max(val, min), max)
+	end
+
+	math.scale = function(val, in_min, in_max, out_min, out_max)
+		return out_min + (val-in_min)*(out_max-out_min)/(in_max-in_min)
+	end
+
+	math.dist = function(x1, x2, y1, y2)
+		local xd = x2 - x1
+		local yd = y2 - y1
+		return math.sqrt( xd * xd + yd * yd )
+	end
+
+	mod_wiggle = function(...)
+		local beat,len,amt,step,str,param = arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]
+		local cur,last,f = amt,0,1
+		local t = (len-step)
+		param.abs = param.abs or false
+		param.timing = param.timing or 'len'
+		if param.timing == 'end' then t = (len-beat) end
+		for i = 0,t,step do
+			if i == t then cur = 0 end
+			mod {(beat-(step/2))+i, step, tostring(str), last, cur, ease = param.ease, pn = param.pn, timing = 'len'}
+			last = cur
+			if param.abs then cur = cur-(amt*f) f=-f else cur = -cur end
+		end
+	end
+
+	mod_bounce = function(...)
+		local beat,len,start,apex,str,param = arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]
+		param.hold = param.hold or 0
+		mod {beat, (len/2), tostring(str), start, apex, ease = param.in_ease, pn = param.pn, timing = 'len'}
+		{beat+(len/2)+param.hold, (len/2), tostring(str), apex, start, ease = param.out_ease, pn = param.pn, timing = 'len'}
+	end
+
+	-- s/o to BrotherMojo
+
+	reverse_rotation = function(angleX, angleY, angleZ)
+		local sinX,cosX,sinY,cosY,sinZ,cosZ = math.sin(angleX),math.cos(angleX),math.sin(angleY),math.cos(angleY),math.sin(angleZ),math.cos(angleZ)
+		return { math.atan2(-cosX*sinY*sinZ-sinX*cosZ,cosX*cosY), math.asin(-cosX*sinY*cosZ+sinX*sinZ), math.atan2(-sinX*sinY*cosZ-cosX*sinZ,cosY*cosZ) }
+	end
+
+	rotate_and_counter = function(xDegrees, yDegrees, zDegrees, player_or_object)
+		local DEG_TO_RAD = math.pi / 180;
+		local angles = reverseRotation(xDegrees * DEG_TO_RAD, yDegrees * DEG_TO_RAD, zDegrees * DEG_TO_RAD);
+		local str = ''
+		if type(player_or_object) == 'number' then
+			str = '*-1 '..xDegrees..' rotationx, *-1 '..
+			yDegrees..' rotationy, *-1 '..
+			zDegrees..' rotationz, '
+		else
+			if player_or_object then
+				player_or_object:rotationx(xDegrees)
+				player_or_object:rotationy(yDegrees)
+				player_or_object:rotationz(zDegrees)
+			end
+		end
+		str = str..'*-1 '..(angles[1]*100)..' confusionxoffset, *-1 '..
+		(angles[2]*100)..' confusionyoffset, *-1 '..
+		(angles[3]*100)..' confusionzoffset';
+
+		return str
+	end
+
+	mod_getCounterRotation = function(xDegrees, yDegrees, zDegrees)
+		local DEG_TO_RAD = math.pi / 180;
+		local angles = reverseRotation(xDegrees * DEG_TO_RAD, yDegrees * DEG_TO_RAD, zDegrees * DEG_TO_RAD);
+		return {angles[1]*100, angles[2]*100, angles[3]*100}
+	end
+
+
+
+
+
+end)"
+/>
