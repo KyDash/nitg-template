@@ -212,15 +212,11 @@
 		end
 
 		applymods = function()
-			if str[0] then
-				GAMESTATE:ApplyModifiers(str[0])
-				str[0] = nil
-			end
+			print(GAMESTATE:GetSongBeat(), str[1])
 			for pn = 1, max_players do
 				if str[pn] then
 					GAMESTATE:ApplyModifiers(str[pn], available_players[pn])
 					str[pn] = nil
-
 				end
 			end
 		end
@@ -264,13 +260,13 @@
 
 		}
 
+		last = GAMESTATE:GetSongBeat()
 		function update()
 			local beat = GAMESTATE:GetSongBeat()
-
+			if beat == last then return end
 			for k, v in pairs(mods) do
 				if (v.func == 'mod' or v.func == 'perf' or v.func == 'perfease') and first_seen_beat > v.range[2] then
 					mods[k] = nil
-					break
 				end
 				if beat >= v.range[1] then
 					add[v.func](v, beat)
@@ -278,11 +274,11 @@
 				end
 				if beat > v.range[2] and beat > (v.persist or 0) then
 					mods[k] = nil
-					break
 				end
 			end
 
 			applymods()
+			last = beat
 		end
 
 		function set()
