@@ -1,0 +1,368 @@
+<Layer
+	Type="ActorFrame"
+	InitCommand="%function(self)
+		local m_prefix = setmetatable({}, { __index = _G, __call = function(self, a) setfenv(a, self) return a end })
+		setfenv(1, m_prefix)
+		function print(...) return _G.print('##', unpack(arg)) end
+
+		mods = {}
+
+		maxplayers = 4
+
+		players = {} -- table that contains players and elements
+		origins = {} -- table that contains original values of players and elements
+		available_players = {} 
+
+		for pn = 1, maxplayers do
+			table.insert(players, {}) -- add a table in the players table for players 1 to 2
+			table.insert(origins, {}) -- add a table in the origins table for players 1 to 2
+			players[pn]['proxies'] = {} -- add a table in each players table in the players table designated for any proxies
+
+			local elements_to_declare = {'p', 'jud', 'com', 'n'}
+
+			for cur_element, element in ipairs(elements_to_declare) do
+				players[pn]['proxies'][element] = {} -- proxies are a bit more finicky 
+			end
+		end
+
+		e, l = 'end', 'len'
+
+		default = {
+			timing = 'len',
+			player = {},
+			ease = function(t, b, c, d) return c * t / d + b end,
+		}
+
+		spb = function(beat) return (1 / GAMESTATE:GetCurBPS()) * beat end
+
+		first_seen_beat = GAMESTATE:GetSongBeat();
+
+		for i = 1, maxplayers do
+			table.insert(default.player, i)
+		end
+
+		function perframe(values, op)
+			op.timing = op.timing or default.timing
+			local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
+
+			table.insert(mods, {range = beat_range, func = 'perf', values[3]})
+			if op.persist and first_seen_beat > beat_range[2] then
+				if type(op.persist) == 'boolean' then op.persist = 9E9 end
+				op.persist_timing = op.persist_timing or op.timing
+				op.persist = (op.persist or 0.1) + (op.persist_timing == 'len' and values[2] or 0)
+				local beat_range = {values[2], values[2]}
+				local f = {values[3], op.func_if_persist}
+				table.insert(mods, {range = beat_range, func = 'func', f, persist = op.persist})
+			end
+		end
+
+		function func(values, op)
+
+			op.timing = op.timing or default.timing
+
+			if op.persist and type(op.persist) == 'boolean' then op.persist = 9E9 end
+			op.persist = (op.persist or 0.1) + (op.timing == 'len' and values[1] or 0)
+			local beat_range = {values[1], values[1]}
+			local f = {values[2], op.func_if_persist}
+			table.insert(mods, {range = beat_range, func = 'func', f, persist = op.persist})
+
+		end
+
+		function func_ease(values, op)
+			-- 10 / 10 function
+			-- would write again
+			values[3], values[4], values[5] = values[5], values[3], values[4] -- swap values
+
+			func_ease_r(values, op)
+		end
+
+		function func_ease_r(values, op)
+			op.timing = op.timing or default.timing
+			local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
+
+			local percentages = {values[4], values[5]}
+			op.args = op.args and (type(op.args) == 'table' and op.args or {op.args}) or {} 
+
+			table.insert(mods, {range = beat_range, func = 'perfease', percentage = percentages, args = op.args, ease = op.ease, values[3]})
+
+			if op.persist and first_seen_beat > beat_range[2] then
+				if type(op.persist) == 'boolean' then op.persist = 9E9 end
+				op.persist_timing = op.persist_timing or op.timing
+				op.persist = (op.persist or 0.1) + (op.persist_timing == 'len' and values[2] or 0)
+				local beat_range = {values[2], values[2]}
+				local f = {values[3], op.func_if_persist}
+				table.insert(mods, {range = beat_range, func = 'func', f, persist = op.persist})
+			end			
+		end
+
+		function s_mod(values, op)
+			op.timing = op.timing or default.timing
+			op.pn = (op.override and {1, 2, 3, 4, 5, 6, 7, 8} or op.pn) or default.player
+			local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
+			local mod = values[3]
+			for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+				table.insert(mods, {range = beat_range, player = v, func = 'mod', mod})
+			end
+		end
+
+		function s_mod_once(values, op)
+			op.timing = op.timing or default.timing
+			op.pn = (op.override and {1, 2, 3, 4, 5, 6, 7, 8} or op.pn) or default.player
+			local beat_range = {values[1], values[1]}
+			local mod = values[2]
+			for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+				table.insert(mods, {range = beat_range, player = v, func = 'mod', mod})
+			end
+		end
+
+		function ease(values, op)
+			-- 10 / 10 function
+			-- would write again
+			values[3], values[4], values[5] = values[5], values[3], values[4] -- swap values
+			ease_r(values, op)
+		end
+
+		function ease_r(values, op)
+			op.timing = op.timing or default.timing
+			op.pn = (op.override and {1, 2, 3, 4, 5, 6, 7, 8} or op.pn) or default.player
+			op.ease = op.ease or default.ease
+			local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
+			local mod = values[3]
+			local percentages = {values[4], values[5]}
+			op.args = op.args and (type(op.args) == 'table' and op.args or {op.args}) or {} 
+
+			for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+				table.insert(mods, {range = beat_range, player = v, func = 'ease', percentage = percentages, args = op.args, ease = op.ease, mod})
+			end
+			if op.sustain then
+				op.sustain_timing = op.sustain_timing or op.timing
+				local beat_range = {values[2] + (op.timing == 'len' and values[1] or 0), op.sustain + (op.sustain_timing == 'len' and values[2] or 0)}
+				for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+					local mod = (mod == 'xmod' and percentages[2] .. 'x') or (mod == 'cmod' and 'c' .. percentages[2]) or percentages[2] .. ' ' .. mod
+					table.insert(mods, {range = beat_range, player = v, func = 'mod', '*-1 ' .. mod})
+				end
+			end
+		end
+
+		valid_inserts = {
+			{'number', 'number', 'function', timing = 'string', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', ret = perframe}, -- perframe
+			{'number', 'function', timing = 'string', persist = {'boolean', 'number'}, func_if_persist = 'function', ret = func}, -- func
+			{'number', 'number', 'number', 'number', 'function', timing = 'string', ease = 'function', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = func_ease}, -- func ease
+			{'number', 'number', 'function', 'number', 'number', timing = 'string', ease = 'function', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = func_ease_r}, -- func ease
+
+			{'number', 'number', 'string', timing = 'string', pn = {'table', 'number'}, ret = s_mod}, -- mod
+			{'number', 'string', pn = {'table', 'number'}, ret = s_mod_once}, -- mod
+			
+			{'number', 'number', 'number', 'number', 'string', timing = 'string', ease = 'function', pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease}, -- ease mod
+			{'number', 'number', 'string', 'number', 'number', timing = 'string', ease = 'function' , pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease_r}, -- another ease mod
+		}
+
+		function type_check(v)
+			if type(v) == 'table' then
+				for which, t in ipairs(valid_inserts) do
+					local count = table.getn(v)
+					local values = {}
+					for i, k in ipairs(v) do
+						if type(k) == t[i] then
+							values[i] = k
+						else
+							break
+						end
+						if i == count then
+							local optionals = {}
+							for m, n in pairs(v) do
+								if type(m) ~= 'number' then
+									if type(t[m]) == 'table' then
+										for _, j in ipairs(t[m]) do
+											if type(n) == j then
+												optionals[m] = n
+												break
+											end
+										end
+									else
+										if type(n) == t[m] then
+											optionals[m] = n
+										end
+									end
+								end
+							end
+							t.ret(values, optionals) return
+						end
+					end
+				end
+				print('Not a valid entry')
+			else
+				print('Not a table')
+			end
+		end
+
+		function mod(v)
+			type_check(v)
+			return mod
+		end
+
+		str = {}
+
+		addmods = function(string, player)
+			if str[player] then
+				str[player] = str[player] .. ', ' .. string
+			else 
+				str[player] = string
+			end
+		end
+
+		applymods = function()
+			if str[0] then
+				GAMESTATE:ApplyModifiers(str[0])
+				str[0] = nil
+			end
+			for pn = 1, maxplayers do
+				if str[pn] then
+					GAMESTATE:ApplyModifiers(str[pn], available_players[pn])
+					str[pn] = nil
+
+				end
+			end
+		end
+
+
+		
+		add = {
+			mod = function(...)
+				addmods(arg[1][1], arg[1].player)
+			end,
+
+			func = function(...)
+				if arg[1].persist and first_seen_beat > arg[1].range[2] and first_seen_beat < arg[1].persist then
+					local func = arg[1][1][2] or arg[1][1][1]
+					func()
+				else
+					arg[1][1][1]()
+				end
+			end,
+
+			perf = function(...)
+				arg[1][1](arg[2])
+			end,
+
+			ease = function(...)
+				local duration = arg[1].range[2] - arg[1].range[1]
+				local time = arg[2] - arg[1].range[1]
+				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
+				--print(arg[2], duration, time, percent)
+				local mod = (arg[1][1] == 'xmod' and percent .. 'x') or (arg[1][1] == 'cmod' and 'c' .. percent) or percent .. ' ' .. arg[1][1]
+				addmods('*-1 ' .. mod, arg[1].player)
+			end,
+
+			perfease = function(...)
+				local duration = arg[1].range[2] - arg[1].range[1]
+				local time = arg[2] - arg[1].range[1]
+				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
+				--print(percent)
+				arg[1][1](percent, arg[2])
+			end
+
+		}
+
+		function update()
+			local beat = GAMESTATE:GetSongBeat()
+
+			for k, v in pairs(mods) do
+				if (v.func == 'mod' or v.func == 'perf' or v.func == 'perfease') and first_seen_beat > v.range[2] then
+					mods[k] = nil
+					break
+				end
+				if beat >= v.range[1] then
+					add[v.func](v, beat)
+					v.persist = nil
+				end
+				if beat > v.range[2] and beat > (v.persist or 0) then
+					mods[k] = nil
+					break
+				end
+			end
+
+			applymods()
+		end
+
+		function set()
+			-- name players, judgment, combo and notefield
+			-- prefix.players[<pn>].<element> to grab players, judgment, combo, and NoteField
+			-- prefix.origins[<pn>].<element>.<origin> to grab the original value of <origin> at beat 0
+			--
+			-- elements:
+			--	p	= Player
+			--	jud = Judgment
+			--	com = Combo
+			--	n	= Notefield
+			--	proxies
+			--		p[n]	= nth player proxy in table
+			--		jud[n]	= nth judgment proxy in table
+			--		com[n]	= nth combo proxy in table
+			--
+			-- origins:
+			--	x
+			--	y
+			--	z
+			--	zoom
+
+			-- can someone *please* buy me chairs for all these tables
+
+			local screen = SCREENMAN:GetTopScreen() -- shortcut to grab the topscreen
+			local origin_to_grab = {{'x', 'GetX'}, {'y', 'GetY'}, {'z', 'GetZ'}, {'zoom', 'GetZoom'}} -- list names and function names to use to get the original position of elements
+			local elements_to_hide = {'BPMDisplay', 'LifeFrame', 'ScoreFrame', 'Overlay', 'Underlay', 'ScoreP1', 'ScoreP2', 'LifeP1', 'LifeP2'}
+
+			for pn = 1, 2 do
+				if screen:GetChild('PlayerP' .. pn) then
+					for i = pn, 8, 2 do
+						table.insert(available_players, i)
+					end
+				end
+			end
+
+			table.sort(available_players)
+
+			for pn = 1, maxplayers do
+				if screen:GetChild('PlayerP' .. available_players[pn]) then -- check if the players exist, otherwise don't do anything that touches the players themselves
+					local elements_to_grab = { -- list elements, and names to grab them
+						{screen:GetChild('PlayerP' .. available_players[pn]), 'p'},
+						{screen:GetChild('PlayerP' .. math.mod(available_players[pn] - 1, 2) + 1):GetChild('Judgment'), 'jud'},
+						{screen:GetChild('PlayerP' .. math.mod(available_players[pn] - 1, 2) + 1):GetChild('Combo'), 'com'},
+						{screen:GetChild('PlayerP' .. available_players[pn]):GetChild('NoteField'), 'n'}
+					}
+
+					screen:GetChild('PlayerP' .. available_players[pn]):GetChild('Judgment'):hidden(1)
+					screen:GetChild('PlayerP' .. available_players[pn]):GetChild('Combo'):hidden(1)
+
+					for cur_element, element in ipairs(elements_to_grab) do
+						players[pn][element[2]] = element[1] -- name and assign each variable for player related elements
+						origins[pn][element[2]] = {} -- table that will hold values for original values of specific of each element to each player
+
+						for cur_origin, origin in ipairs(origin_to_grab) do
+							--print(cur_origin, origin[1], origin[2], element[2])
+							origins[pn][element[2]][origin[1]] = players[pn][element[2]][origin[2]](players[pn][element[2]]) -- 👮
+						end
+					end
+				end
+			end
+
+			for cur_element, element in ipairs(elements_to_hide) do
+				if screen:GetChild(element) then
+					screen:GetChild(element):hidden(1)
+				end
+			end
+		end
+
+		function reset()
+			_G.m_prefix = nil
+		end
+		_G.m_prefix = m_prefix
+		self:sleep(9E9)
+	end"
+
+><children>
+	<Layer File="./easing.xml"/>
+	<Layer File="./spellcards.xml"/>
+	<Layer File="./mods.xml"/>
+	<Layer Condition="m_prefix.reset()"/>
+</children></Layer>
