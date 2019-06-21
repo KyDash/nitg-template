@@ -212,7 +212,6 @@
 		end
 
 		applymods = function()
-			print(GAMESTATE:GetSongBeat(), str[1])
 			for pn = 1, max_players do
 				if str[pn] then
 					GAMESTATE:ApplyModifiers(str[pn], available_players[pn])
