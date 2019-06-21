@@ -7,13 +7,13 @@
 
 		mods = {}
 
-		maxplayers = 4
+		max_players = 4
 
 		players = {} -- table that contains players and elements
 		origins = {} -- table that contains original values of players and elements
 		available_players = {} 
 
-		for pn = 1, maxplayers do
+		for pn = 1, max_players do
 			table.insert(players, {}) -- add a table in the players table for players 1 to 2
 			table.insert(origins, {}) -- add a table in the origins table for players 1 to 2
 			players[pn]['proxies'] = {} -- add a table in each players table in the players table designated for any proxies
@@ -37,7 +37,7 @@
 
 		first_seen_beat = GAMESTATE:GetSongBeat();
 
-		for i = 1, maxplayers do
+		for i = 1, max_players do
 			table.insert(default.player, i)
 		end
 
@@ -216,7 +216,7 @@
 				GAMESTATE:ApplyModifiers(str[0])
 				str[0] = nil
 			end
-			for pn = 1, maxplayers do
+			for pn = 1, max_players do
 				if str[pn] then
 					GAMESTATE:ApplyModifiers(str[pn], available_players[pn])
 					str[pn] = nil
@@ -322,7 +322,7 @@
 
 			table.sort(available_players)
 
-			for pn = 1, maxplayers do
+			for pn = 1, max_players do
 				if screen:GetChild('PlayerP' .. available_players[pn]) then -- check if the players exist, otherwise don't do anything that touches the players themselves
 					local elements_to_grab = { -- list elements, and names to grab them
 						{screen:GetChild('PlayerP' .. available_players[pn]), 'p'},
