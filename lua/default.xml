@@ -264,6 +264,7 @@
 					local func = arg[1][1][2] or arg[1][1][1]
 					func()
 				else
+					if first_seen_beat > arg[1].range[2] then return end
 					arg[1][1][1]()
 				end
 			end,
