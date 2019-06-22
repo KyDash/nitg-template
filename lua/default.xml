@@ -392,6 +392,7 @@
 ><children>
 	<Layer File="./easing.xml"/>
 	<Layer File="./spellcards.xml"/>
+	<Layer File="./modhelpers.xml"/>
 	<Layer File="./mods.xml"/>
 	<Layer Condition="m_prefix.reset()"/>
 </children></Layer>
