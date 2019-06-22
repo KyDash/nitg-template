@@ -35,6 +35,38 @@
 
 		spb = function(beat) return (1 / GAMESTATE:GetCurBPS()) * beat end
 
+		short = {
+			pi = math.pi,
+			scx = SCREEN_CENTER_X,
+			scy = SCREEN_CENTER_Y,
+			sw = SCREEN_WIDTH,
+			sh = SCREEN_HEIGHT,
+			sl = SCREEN_LEFT,
+			sr = SCREEN_RIGHT,
+			st = SCREEN_TOP,
+			sb = SCREEN_BOTTOM,
+			as = 64,
+			-- shortcuts used to scale things depending on ratio / internal resolution, stolen from various people
+			z = (480 * (SCREEN_WIDTH / SCREEN_HEIGHT)) / 640, -- Thanks Mr.ThatKid
+			w = SCREEN_WIDTH / 640, -- Thanks Mr.ThatKid
+			h = SCREEN_HEIGHT / 480, -- Thanks Mr.ThatKid
+			fov = function(fov) return 360 / math.pi * math.atan(math.tan(math.pi * (1 / (360 / fov))) * SCREEN_WIDTH / SCREEN_HEIGHT * 0.75) end, -- thanks BrotherMojo
+
+			-- ACTUAL_SCREEN_WIDTH
+			asw = 480 * (DISPLAY:GetDisplayWidth() / DISPLAY:GetDisplayHeight()), -- SCREEN_WIDTH and SCREEN_CENTER_X floor their values, causing things to not actually be positioned properly with certain aspect ratios
+			-- ACTUAL_SCREEN_CENTER_X
+			ascx = 480 * (DISPLAY:GetDisplayWidth() / DISPLAY:GetDisplayHeight()) / 2, -- SCREEN_WIDTH and SCREEN_CENTER_X floor their values, causing things to not actually be positioned properly with certain aspect ratios
+
+			dw = FUCK_EXE and DISPLAY:GetDisplayWidth(),
+			dh = FUCK_EXE and DISPLAY:GetDisplayHeight(),
+		}
+
+		player_redir = function(player, player_input)
+			if SCREENMAN:GetTopScreen():GetChild('PlayerP' .. player) and SCREENMAN:GetTopScreen():GetChild('PlayerP' .. player_input) and PREFSMAN:GetPreference('Autoplay') == 0 then
+				SCREENMAN:GetTopScreen():GetChild('PlayerP' .. player):SetInputPlayer(player_input - 1)
+			end
+		end
+
 		first_seen_beat = GAMESTATE:GetSongBeat();
 
 		for i = 1, max_players do
@@ -136,7 +168,7 @@
 			end
 			if op.sustain then
 				op.sustain_timing = op.sustain_timing or op.timing
-				local beat_range = {values[2] + (op.timing == 'len' and values[1] or 0), op.sustain + (op.sustain_timing == 'len' and values[2] or 0)}
+				local beat_range = {values[2] + (op.timing == 'len' and values[1] or 0), op.sustain + (op.sustain_timing == 'len' and (values[2] + (op.timing == 'len' and values[1] or 0)) or 0)}
 				for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
 					local mod = (mod == 'xmod' and percentages[2] .. 'x') or (mod == 'cmod' and 'c' .. percentages[2]) or percentages[2] .. ' ' .. mod
 					table.insert(mods, {range = beat_range, player = v, func = 'mod', '*-1 ' .. mod})
@@ -241,6 +273,7 @@
 			end,
 
 			ease = function(...)
+				if first_seen_beat > arg[1].range[2] then return end
 				local duration = arg[1].range[2] - arg[1].range[1]
 				local time = arg[2] - arg[1].range[1]
 				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
@@ -264,7 +297,7 @@
 			local beat = GAMESTATE:GetSongBeat()
 			if beat == last then return end
 			for k, v in pairs(mods) do
-				if (v.func == 'mod' or v.func == 'perf' or v.func == 'perfease') and first_seen_beat > v.range[2] then
+				if v.func ~= 'func' and first_seen_beat > v.range[2] then
 					mods[k] = nil
 				end
 				if beat >= v.range[1] then
