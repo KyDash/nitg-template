@@ -270,7 +270,6 @@
 			for k, v in pairs(mods) do
 				if (v.func == 'mod' or v.func == 'perf' or v.func == 'perfease') and first_seen_beat > v.range[2] then
 					mods[k] = nil
-					break
 				end
 				if beat >= v.range[1] then
 					add[v.func](v, beat)
@@ -278,7 +277,6 @@
 				end
 				if beat > v.range[2] and beat > (v.persist or 0) then
 					mods[k] = nil
-					break
 				end
 			end
 
