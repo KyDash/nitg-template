@@ -236,6 +236,12 @@
 		str = {}
 
 		addmods = function(string, player)
+			if not player then
+				for i = 1, max_players do
+					addmods(string, i)
+				end
+				return
+			end
 			if str[player] then
 				str[player] = str[player] .. ', ' .. string
 			else 
@@ -271,6 +277,7 @@
 			end,
 
 			perf = function(...)
+				if first_seen_beat > arg[1].range[2] then return end
 				arg[1][1](arg[2])
 			end,
 
