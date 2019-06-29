@@ -1,0 +1,7 @@
+<Layer Type="ActorFrame" InitCommand="%m_prefix(function(self)
+if init then init = nil return end -- prevent init frum running twice
+init = true
+
+-- song specific variables that need to be initialised before anything go here
+
+end)" />

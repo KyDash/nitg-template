@@ -1,4 +1,8 @@
-<Layer Type = "ActorFrame"><children>
+<Layer Type="ActorFrame" InitCommand="%function(self)
+	if not _G.________init then _G.________init = 'bg' end
+	self:sleep(9E9)
+end"><children>
+	<Layer Condition="_G.________init == 'bg'" File="../init.xml"/> <!-- load this if bg is loaded first -->
 	<!-- bg things go here -->
-	<Layer Condition="m_prefix.reset()"/>
+	<Layer Condition="_G.________init == 'fg' and m_prefix.reset()"/> <!-- unload if fg is loaded first -->
 </children></Layer>

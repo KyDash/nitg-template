@@ -28,9 +28,11 @@ init = true
 
 ]]
 
-init_mods = 'clearall, *-1 overhead, *-1 2x, *-1 -100 drawsizeback, stealthpastreceptors, *-1 zbuffer, approachtype, *-1 -100 spiralholds, *-1 200 modtimer, *-1 halgun, *-1 dizzyholds'
+init_mods = 'clearall, *-1 overhead, *-1 2x, *-1 zbuffer, approachtype'
 GAMESTATE:ApplyModifiers(init_mods)
 mod {0, 9E9, init_mods}
 
 end)"
-OnCommand="queuecommand,🦉;luaeffect,🐑" 🦉Command="%m_prefix.set" 🐑Command="%m_prefix.update"/>
+OnCommand="queuecommand,🦉;luaeffect,🐑" 🦉Command="%m_prefix.set" 🐑Command="%m_prefix.update"><children>
+
+</children></Layer>
