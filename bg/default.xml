@@ -1,3 +1,4 @@
 <Layer Type = "ActorFrame"><children>
 	<!-- bg things go here -->
+	<Layer Condition="m_prefix.reset()"/>
 </children></Layer>

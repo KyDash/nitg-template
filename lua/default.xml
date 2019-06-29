@@ -256,6 +256,7 @@
 		
 		add = {
 			mod = function(...)
+				if first_seen_beat > arg[1].range[2] then return end
 				addmods(arg[1][1], arg[1].player)
 			end,
 
@@ -278,7 +279,6 @@
 				local duration = arg[1].range[2] - arg[1].range[1]
 				local time = arg[2] - arg[1].range[1]
 				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
-				--print(arg[2], duration, time, percent)
 				local mod = (arg[1][1] == 'xmod' and percent .. 'x') or (arg[1][1] == 'cmod' and 'c' .. percent) or percent .. ' ' .. arg[1][1]
 				addmods('*-1 ' .. mod, arg[1].player)
 			end,
@@ -287,7 +287,6 @@
 				local duration = arg[1].range[2] - arg[1].range[1]
 				local time = arg[2] - arg[1].range[1]
 				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
-				--print(percent)
 				arg[1][1](percent, arg[2])
 			end
 
@@ -368,7 +367,6 @@
 						origins[pn][element[2]] = {} -- table that will hold values for original values of specific of each element to each player
 
 						for cur_origin, origin in ipairs(origin_to_grab) do
-							--print(cur_origin, origin[1], origin[2], element[2])
 							origins[pn][element[2]][origin[1]] = players[pn][element[2]][origin[2]](players[pn][element[2]]) -- 👮
 						end
 					end
@@ -394,5 +392,4 @@
 	<Layer File="./spellcards.xml"/>
 	<Layer File="./modhelpers.xml"/>
 	<Layer File="./mods.xml"/>
-	<Layer Condition="m_prefix.reset()"/>
 </children></Layer>
