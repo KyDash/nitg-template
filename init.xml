@@ -297,7 +297,7 @@
 			perfease = function(...)
 				if first_seen_beat > arg[1].range[2] then return end
 				local duration = arg[1].range[2] - arg[1].range[1]
-				local time = math.min(arg[2], arg[1].range) - arg[1].range[1]
+				local time = math.min(arg[2], arg[1].range[2]) - arg[1].range[1]
 				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
 				arg[1][1](percent, arg[2])
 			end
