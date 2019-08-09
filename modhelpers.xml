@@ -74,7 +74,7 @@ init = true
 
 	mod_getCounterRotation = function(xDegrees, yDegrees, zDegrees)
 		local DEG_TO_RAD = math.pi / 180;
-		local angles = reverseRotation(xDegrees * DEG_TO_RAD, yDegrees * DEG_TO_RAD, zDegrees * DEG_TO_RAD);
+		local angles = reverse_rotation(xDegrees * DEG_TO_RAD, yDegrees * DEG_TO_RAD, zDegrees * DEG_TO_RAD);
 		return {angles[1]*100, angles[2]*100, angles[3]*100}
 	end
 

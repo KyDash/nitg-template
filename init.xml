@@ -295,8 +295,9 @@
 			end,
 
 			perfease = function(...)
+				if first_seen_beat > arg[1].range[2] then return end
 				local duration = arg[1].range[2] - arg[1].range[1]
-				local time = arg[2] - arg[1].range[1]
+				local time = math.min(arg[2], arg[1].range) - arg[1].range[1]
 				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
 				arg[1][1](percent, arg[2])
 			end
@@ -319,6 +320,7 @@
 					if beat > v.range[2] and beat > (v.persist or 0) then
 						mods[k] = nil
 					end
+					if (mods[k + 1] and beat <= mods[k + 1].range[1]) then break end
 				end
 
 				applymods()
@@ -395,6 +397,12 @@
 					screen:GetChild(element):hidden(1)
 				end
 			end
+
+			-- THIS. SUCKS.
+			table.sort(mods, function(a, b) return a.range[1] < b.range[1] end)
+			table.sort(mods, function(a, b) return a.range[1] < b.range[1] end)
+			-- first sort sorts the majority, but chunks that start in the same beat are reversed, so clearall applies last
+			-- second sort reverses those chunk
 		end
 
 		function reset()
