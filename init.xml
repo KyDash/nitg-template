@@ -397,6 +397,12 @@
 					screen:GetChild(element):hidden(1)
 				end
 			end
+
+			for i, v in pairs(mods) do
+				v.iter = i
+			end
+
+			table.sort(mods, function(a, b) return a.range[1] == b.range[1] and (a.iter < b.iter) or (a.range[1] < b.range[1]) end)
 		end
 
 		function reset()
