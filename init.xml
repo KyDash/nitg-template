@@ -1,12 +1,33 @@
-<Layer
-	Type="ActorFrame"
-	InitCommand="%function(self)
+<Layer Type="ActorFrame" InitCommand="%function(self)
 		if _G.________loaded then _G.________loaded = nil return end
 		_G.________loaded = true
 		local m_prefix = setmetatable({}, { __index = _G, __call = function(self, a) setfenv(a, self) return a end })
 		setfenv(1, m_prefix)
 
-		function print(...) return _G.print('##', unpack(arg)) end
+		local type_returns = setmetatable({table = function(t, p) table_view(t, p) end, userdata = function(a, p) actor_view(a, p) end}, {__index = function() return function(a) _G.print('##', a) end end})
+
+		function print(...) for i, v in ipairs(arg) do type_returns[type(v)](v) end end
+
+		function table_view(table, prefix)
+			if not prefix then _G.print('##', table) end
+			for index, value in pairs(table) do
+				local prefix = prefix and prefix .. ' -> ' .. index or '-\t' .. index
+				_G.print('##', prefix, value)
+				if rawget(type_returns,type(value)) ~= nil then type_returns[type(value)](value, prefix) end
+			end
+		end
+
+		function actor_view(actor, prefix)
+			if not prefix then _G.print('##', actor) end
+			if pcall(function() actor:GetNumChildren() end) then
+				for index = 0, actor:GetNumChildren() - 1 do
+					local prefix = prefix and prefix .. ' -> Child ' .. index or '-\tChild ' .. index
+					local child = actor:GetChildAt(index)
+					_G.print('##', prefix, child, child:GetName())
+					if rawget(type_returns,type(child)) ~= nil then type_returns[type(child)](child, prefix) end
+				end
+			end
+		end
 
 		mods = {}
 
