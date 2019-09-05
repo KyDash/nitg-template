@@ -353,6 +353,8 @@
 			end
 		end
 
+		function mod_set() end
+
 		function set()
 			-- name players, judgment, combo and notefield
 			-- prefix.players[<pn>].<element> to grab players, judgment, combo, and NoteField
@@ -418,6 +420,8 @@
 					screen:GetChild(element):hidden(1)
 				end
 			end
+
+			mod_set()
 
 			for i, v in pairs(mods) do
 				v.iter = i
