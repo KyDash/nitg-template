@@ -28,6 +28,10 @@ init = true
 
 ]]
 
+function mod_set()
+
+end
+
 init_mods = 'clearall, *-1 overhead, *-1 2x, *-1 zbuffer, approachtype'
 GAMESTATE:ApplyModifiers(init_mods)
 mod {0, 9E9, init_mods}
