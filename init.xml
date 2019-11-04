@@ -149,25 +149,55 @@
 				local beat_range = {values[2], values[2]}
 				local f = {values[3], op.func_if_persist}
 				table.insert(mods, {range = beat_range, func = 'func', f, persist = op.persist})
-			end			
+			end
 		end
 
 		function s_mod(values, op)
 			op.timing = op.timing or default.timing
-			op.pn = (op.override and {1, 2, 3, 4, 5, 6, 7, 8} or op.pn) or default.player
+			op.pn = op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or default.player
+			local NOT_flag = op.pn[1] < 0
+			if NOT_flag then
+				local temp = {}
+				for i = 1, max_players do
+					table.insert(temp, i)
+				end
+				for i, v in ipairs(op.pn) do
+					if v >= 0 then
+						print('Invalid player config')
+						return
+					end
+					table.remove(temp, math.abs(v))
+				end
+				op.pn = temp
+			end
 			local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
 			local mod = values[3]
-			for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+			for k, v in ipairs(op.pn) do
 				table.insert(mods, {range = beat_range, player = v, func = 'mod', mod})
 			end
 		end
 
 		function s_mod_once(values, op)
 			op.timing = op.timing or default.timing
-			op.pn = (op.override and {1, 2, 3, 4, 5, 6, 7, 8} or op.pn) or default.player
+			op.pn = op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or default.player
+			local NOT_flag = op.pn[1] < 0
+			if NOT_flag then
+				local temp = {}
+				for i = 1, max_players do
+					table.insert(temp, i)
+				end
+				for i, v in ipairs(op.pn) do
+					if v >= 0 then
+						print('Invalid player config')
+						return
+					end
+					table.remove(temp, math.abs(v))
+				end
+				op.pn = temp
+			end
 			local beat_range = {values[1], values[1]}
 			local mod = values[2]
-			for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+			for k, v in ipairs(op.pn) do
 				table.insert(mods, {range = beat_range, player = v, func = 'mod', mod})
 			end
 		end
@@ -181,20 +211,35 @@
 
 		function ease_r(values, op)
 			op.timing = op.timing or default.timing
-			op.pn = (op.override and {1, 2, 3, 4, 5, 6, 7, 8} or op.pn) or default.player
+			op.pn = op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or default.player
+			local NOT_flag = op.pn[1] < 0
+			if NOT_flag then
+				local temp = {}
+				for i = 1, max_players do
+					table.insert(temp, i)
+				end
+				for i, v in ipairs(op.pn) do
+					if v >= 0 then
+						print('Invalid player config')
+						return
+					end
+					table.remove(temp, math.abs(v))
+				end
+				op.pn = temp
+			end
 			op.ease = op.ease or default.ease
 			local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
 			local mod = values[3]
 			local percentages = {values[4], values[5]}
 			op.args = op.args and (type(op.args) == 'table' and op.args or {op.args}) or {} 
 
-			for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+			for k, v in ipairs(op.pn) do
 				table.insert(mods, {range = beat_range, player = v, func = 'ease', percentage = percentages, args = op.args, ease = op.ease, mod})
 			end
 			if op.sustain then
 				op.sustain_timing = op.sustain_timing or op.timing
 				local beat_range = {values[2] + (op.timing == 'len' and values[1] or 0), op.sustain + (op.sustain_timing == 'len' and (values[2] + (op.timing == 'len' and values[1] or 0)) or 0)}
-				for k, v in ipairs(type(op.pn) == 'table' and op.pn or {op.pn}) do
+				for k, v in ipairs(op.pn) do
 					local mod = (mod == 'xmod' and percentages[2] .. 'x') or (mod == 'cmod' and 'c' .. percentages[2]) or percentages[2] .. ' ' .. mod
 					table.insert(mods, {range = beat_range, player = v, func = 'mod', '*-1 ' .. mod})
 				end
@@ -260,6 +305,8 @@
 
 		str = {}
 
+		-- see table.concat
+		-- thanks xero
 		addmods = function(string, player)
 			if not player then
 				for i = 1, max_players do
@@ -268,16 +315,16 @@
 				return
 			end
 			if str[player] then
-				str[player] = str[player] .. ', ' .. string
+				table.insert(str[player], string)
 			else 
-				str[player] = string
+				str[player] = {string}
 			end
 		end
 
 		applymods = function()
 			for pn = 1, max_players do
 				if str[pn] then
-					GAMESTATE:ApplyModifiers(str[pn], available_players[pn])
+					GAMESTATE:ApplyModifiers(table.concat(str[pn], ', '), available_players[pn])
 					str[pn] = nil
 				end
 			end
