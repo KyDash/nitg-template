@@ -55,6 +55,12 @@
 			timing = 'len',
 			player = {},
 			ease = function(t, b, c, d) return c * t / d + b end,
+			behavior = function(table)
+				if table then setmetatable(table, {__index = _G}) end
+				local t = getmetatable(m_prefix)
+				t.__index = table or _G
+				setmetatable(m_prefix, t)
+			end,
 		}
 
 		spb = function(beat) return (1 / GAMESTATE:GetCurBPS()) * beat end
@@ -297,7 +303,7 @@
 			else
 				print('Not a table')
 			end
-		end
+		end]]
 
 		function mod(v)
 			type_check(v)
@@ -491,5 +497,6 @@
 	<Layer File="./easing.xml"/>
 	<Layer File="./spellcards.xml"/>
 	<Layer File="./modhelpers.xml"/>
+	<Layer File="./modhelpers_vintage.xml"/>
 	<Layer File="./init_specific.xml"/>
 </children></Layer>

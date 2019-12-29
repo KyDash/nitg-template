@@ -1,0 +1,145 @@
+<Layer Type="ActorFrame" InitCommand="%m_prefix(function(self)
+if init then init = nil return end -- prevent init frum running twice
+init = true
+cering = {ease = {}}
+
+cering.mod_insert = function(start, len, amp, m, pn)
+	local str = (m == 'xmod' and amp .. 'x') or (m == 'cmod' and 'C' .. amp) or amp .. ' ' .. m
+	mod {start, len, '*-1 ' .. str, pn = pn, timing = 'len'}
+end
+
+cering.mod_clear = function(start, list, pn)
+	for i, v in pairs(list) do
+		cering.mod_insert(start, 1, 0, v, pn)
+	end
+end
+
+cering.mod_ease = function(start, len, ps, pe, m, ease, pn, sus, arg1, arg2)
+	mod {start, len, ps, pe, m, ease = cering.ease[ease], pn = pn, sustain = sus, args = {arg1, arg2}, timing = 'len', sustain_timing = 'len'}
+end
+
+cering.mod_smooth = function(start, len, ps, pe, m, ease, pn, sus, arg1, arg2)
+	mod {start, len, ps, pe, m, ease = cering.ease[ease .. 'inout'], pn = pn, sustain = sus, args = {arg1, arg2}, timing = 'len', sustain_timing = 'len'}
+end
+
+cering.mod_bounce = function(start, len, begin, apex, m, ease, pn, sus, arg1, arg2)
+	cering.mod_ease(start, len / 2, begin, apex, m, ease .. 'out', pn)
+	cering.mod_ease(start + len / 2, len / 2, apex, begin, m, ease .. 'in', pn, sus, arg1, arg2)
+end
+
+cering.mod_perframe = function(start, en, fx)
+	mod {start, en, fx, timing = 'end'}
+end
+
+
+-- oh god oh fuck oh god oh fUCK OH GOD OH FUCK OH FUᖁ ᓕᓱ ᑯᒥᖃᓄ ᓕᓱ ᑐᓕᖁ ᓕᓱ ᑯᒥᖃᓄ
+cering.mod_message = function(start, msg, persist)
+	if type(msg) == 'string' then
+		mod {start, function(str) MESSAGEMAN:Broadcast(str) end, persist = persist, func_args = msg}
+	else
+		mod {start, msg, persist = persist}
+	end 
+end
+
+cering.aux_ease = function(start, len, amp0, amp, ease, actor, effect)
+	local beat = GAMESTATE:GetSongBeat()
+	local ampappl = cering.ease[ease](beat - start, amp0, amp - amp0, len)
+	actor:cmd(effect..','..ampappl)
+end
+
+cering.aux_smooth = function(start, len, amp0, amp, ease, actor, effect)
+	local beat = GAMESTATE:GetSongBeat()
+	local midp = (amp0 + amp) / 2
+	if beat >= start and beat < start + len / 2 then
+		aux_ease(start, len / 2, amp0, midp, ease..'in', actor, effect)
+	elseif beat >= start + len / 2 and beat < start + len then
+		aux_ease(start + len / 2, len / 2, midp, amp, ease..'out', actor, effect)
+	end
+end
+
+cering.aux_bounce = function(start, len, amp0, apex, ease, actor, effect)
+	local beat = GAMESTATE:GetSongBeat()
+	if beat >= start and beat < start + len / 2 then
+		aux_ease(start, len / 2, amp0, apex, ease..'out', actor, effect)
+	elseif beat >= start + len / 2 and beat < start + len then
+		aux_ease(start + len / 2, len / 2, apex, amp0, ease..'in', actor, effect)
+	end
+end
+
+cering.mi = cering.mod_insert
+cering.m = cering.mod_insert
+cering.mb = cering.mod_bounce
+cering.ms = cering.mod_smooth
+cering.mm = cering.mod_message
+cering.mpf = cering.mod_perframe
+cering.mc = cering.mod_clear
+cering.me = cering.mod_ease
+cering.ae = cering.aux_ease
+cering.as = cering.aux_smooth
+cering.ab = cering.aux_bounce
+
+-- :fuck:
+cering.ease.lin = linear
+cering.ease.sineinout = inOutSine
+cering.ease.sinein = inSine
+cering.ease.sineout = outSine
+cering.ease.quadinout = inOutQuad
+cering.ease.quadin = inQuad
+cering.ease.quadout = outQuad
+cering.ease.cubeinout = inOutCubic
+cering.ease.cubein = inCubic
+cering.ease.cubeout = outCubic
+cering.ease.quartinout = inOutQuart
+cering.ease.quartin = inQuart
+cering.ease.quartout = outQuart
+cering.ease.quintinout = inOutQuint
+cering.ease.quintin = inQuint
+cering.ease.quintout = outQuint
+cering.ease.expoinout = inOutExpo
+cering.ease.expoin = inExpo
+cering.ease.expoout = outExpo
+cering.ease.circinout = inOutCirc
+cering.ease.circin = inCirc
+cering.ease.circout = outCirc
+cering.ease.backinout = inOutBack
+cering.ease.backin = inBack
+cering.ease.backout = outBack
+cering.ease.elasticinout = inOutElastic
+cering.ease.elasticin = inElastic
+cering.ease.elasticout = outElastic
+cering.ease.bounceinout = inOutBounce
+cering.ease.bouncein = inBounce
+cering.ease.bounceout = outBounce
+
+exschwasion = {}
+
+exschwasion.mod_insert = function(beat, len, m, t, pn)
+	mod {beat, len, m, timing = t, pn = pn}
+end
+
+exschwasion.mod_ease = function(beat, len, ps, pe, m, t, ease, pn, sus, arg1, arg2)
+	mod {beat, len, ps, pe, m, timing = t, ease = ease, pn = pn, sustain = sus, args = {arg1, arg2}}
+end
+
+exschwasion.mod_perframe = function(start_beat, end_beat, f)
+	mod {start_beat, end_beat, f, timing = 'end'}
+end
+
+exschwasion.mod_message = function(beat, msg, p)
+	if type(msg) == 'string' then
+		mod {beat, function(str) MESSAGEMAN:Broadcast(str) end, persist = p, func_args = msg}
+	else
+		mod {beat, msg, persist = p}
+	end 
+end
+
+exschwasion.m = exschwasion.mod_insert
+exschwasion.me = exschwasion.mod_ease
+exschwasion.mpf = exschwasion.mod_perframe
+exschwasion.mm = exschwasion.mod_message
+exschwasion.ae = cering.ae
+exschwasion.as = cering.as
+exschwasion.ab = cering.ab
+
+end)"
+/>
