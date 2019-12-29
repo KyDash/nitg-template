@@ -325,7 +325,9 @@
 		applymods = function()
 			for pn = 1, max_players do
 				if str[pn] then
-					GAMESTATE:ApplyModifiers(table.concat(str[pn], ', '), available_players[pn])
+					if players[pn].p:IsAwake() then
+						GAMESTATE:ApplyModifiers(table.concat(str[pn], ', '), available_players[pn])
+					end
 					str[pn] = nil
 				end
 			end
