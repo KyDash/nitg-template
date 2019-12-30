@@ -303,7 +303,7 @@
 			else
 				print('Not a table')
 			end
-		end]]
+		end
 
 		function mod(v)
 			type_check(v)
