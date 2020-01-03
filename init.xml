@@ -382,27 +382,28 @@
 		}
 
 		last = GAMESTATE:GetSongBeat()
-		function update()
-			local r, err = pcall(function()
-				local beat = GAMESTATE:GetSongBeat()
-				if beat == last then return end
-				for k, v in pairs(mods) do
-					if v.func ~= 'func' and first_seen_beat > v.range[2] then
-						mods[k] = nil
-					end
-					if beat >= v.range[1] then
-						add[v.func](v, beat)
-						v.persist = nil
-					end
-					if beat > v.range[2] and beat > (v.persist or 0) then
-						mods[k] = nil
-					end
-					if (mods[k + 1] and beat < mods[k + 1].range[1]) then break end
+		local function run()
+			local beat = GAMESTATE:GetSongBeat()
+			if beat == last then return end
+			for k, v in pairs(mods) do
+				if v.func ~= 'func' and first_seen_beat > v.range[2] then
+					mods[k] = nil
 				end
+				if beat >= v.range[1] then
+					add[v.func](v, beat)
+					v.persist = nil
+				end
+				if beat > v.range[2] and beat > (v.persist or 0) then
+					mods[k] = nil
+				end
+				if (mods[k + 1] and beat < mods[k + 1].range[1]) then break end
+			end
 
-				applymods()
-				last = beat
-			end)
+			applymods()
+			last = beat
+		end
+		function update()
+			local r, err = pcall(run)
 
 			if not r then
 				print(err)
