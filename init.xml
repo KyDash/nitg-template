@@ -4,28 +4,51 @@
 		local m_prefix = setmetatable({}, { __index = _G, __call = function(self, a) setfenv(a, self) return a end })
 		setfenv(1, m_prefix)
 
-		local type_returns = setmetatable({table = function(t, p) table_view(t, p) end, userdata = function(a, p) actor_view(a, p) end}, {__index = function() return function(a) _G.print('##', a) end end})
-
-		function print(...) for i, v in ipairs(arg) do type_returns[type(v)](v) end end
-
-		function table_view(table, prefix)
-			if not prefix then _G.print('##', table) end
-			for index, value in pairs(table) do
-				local prefix = prefix and prefix .. ' -> ' .. index or '-\t' .. index
-				_G.print('##', prefix, value)
-				if rawget(type_returns,type(value)) ~= nil then type_returns[type(value)](value, prefix) end
-			end
-		end
-
-		function actor_view(actor, prefix)
-			if not prefix then _G.print('##', actor) end
-			if pcall(function() actor:GetNumChildren() end) then
-				for index = 0, actor:GetNumChildren() - 1 do
-					local prefix = prefix and prefix .. ' -> Child ' .. index or '-\tChild ' .. index
-					local child = actor:GetChildAt(index)
-					_G.print('##', prefix, child, child:GetName())
-					if rawget(type_returns,type(child)) ~= nil then type_returns[type(child)](child, prefix) end
+		do
+			function table_scrape(table, prefix, depth)
+				depth = depth or 0
+				local old_prefix = prefix
+				local string = depth == 0 and '\n##\t' .. tostring(table) or ''
+				for key, value in pairs(table) do
+					prefix = depth == 0 and ('##\t-\t' .. key) or (old_prefix .. ' -> ' .. key)
+					string = string .. '\n' .. prefix .. ' = ' .. tostring(value)
+					if type(value) == 'table' or type(value) == 'userdata' then
+						string = string .. m_prefix[type(value) .. '_scrape'](value, prefix, depth + 1)
+					end
 				end
+				return string .. (depth == 0 and '\n' or '')
+			end
+
+			local function actor_has_children(actor) actor:GetNumChildren() end
+
+			function userdata_scrape(actor, prefix, depth)
+				depth = depth or 0
+				local old_prefix = prefix
+				local string = depth == 0 and '\n##\t' .. tostring(actor) or ''
+				if pcall(actor_has_children, actor) then
+					for index = 0, actor:GetNumChildren() - 1 do
+						local child = actor:GetChildAt(index)
+						prefix = depth == 0 and ('##\t-\t' .. index) or (old_prefix .. (' -> Ch ' .. index .. (child:GetName() ~= '' and (' (' .. child:GetName() .. ')') or '')))
+						string = string .. '\n' .. prefix .. ' = ' .. tostring(child)
+						if type(child) == 'table' or type(child) == 'userdata' then
+							string = string .. m_prefix[type(child) .. '_scrape'](child, prefix, depth + 1)
+						end
+					end
+				end
+				return string .. (depth == 0 and '\n' or '')
+			end
+
+			function print(...)
+				local string = ''
+				for i = 1, arg.n do
+					if type(arg[i]) == 'table' or type(arg[i]) == 'userdata' then
+						string = string .. m_prefix[type(arg[i]) .. '_scrape'](arg[i])
+						string = string .. '##'
+					else
+						string = string .. (i == 1 and '' or '\t') .. tostring(arg[i])
+					end
+				end
+				_G.print('##', string)
 			end
 		end
 
