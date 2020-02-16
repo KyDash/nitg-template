@@ -218,8 +218,8 @@ function ease.outInExpo(t, b, c, d)
 end
 
 function ease.inCirc(t, b, c, d)
-t = t / d
-return(-c * (sqrt(1 - pow(t, 2)) - 1) + b)
+	t = t / d
+	return(-c * (sqrt(1 - pow(t, 2)) - 1) + b)
 end
 
 function ease.outCirc(t, b, c, d)

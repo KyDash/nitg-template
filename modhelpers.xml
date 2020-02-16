@@ -21,8 +21,7 @@ init = true
 		return math.sqrt( xd * xd + yd * yd )
 	end
 
-	mod_wiggle = function(...)
-		local beat,len,amt,step,str,param = arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]
+	mod_wiggle = function(beat,len,amt,step,str,param)
 		local cur,last,f = amt,0,1
 		local t = (len-step)
 		param.abs = param.abs or false
@@ -36,8 +35,7 @@ init = true
 		end
 	end
 
-	mod_bounce = function(...)
-		local beat,len,start,apex,str,param = arg[1],arg[2],arg[3],arg[4],arg[5],arg[6]
+	mod_bounce = function(beat,len,start,apex,str,param)
 		param.hold = param.hold or 0
 		mod {beat, (len/2), tostring(str), start, apex, ease = param.in_ease, pn = param.pn, timing = 'len'}
 		{beat+(len/2)+param.hold, (len/2), tostring(str), apex, start, ease = param.out_ease, pn = param.pn, timing = 'len'}

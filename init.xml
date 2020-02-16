@@ -366,41 +366,42 @@
 
 		
 		add = {
-			mod = function(...)
-				if first_seen_beat > arg[1].range[2] then return end
-				addmods(arg[1][1], arg[1].player)
+			mod = function(a, b)
+				if first_seen_beat > a.range[2] then return end
+				addmods(a[1], a.player)
 			end,
 
-			func = function(...)
-				if arg[1].persist and first_seen_beat > arg[1].range[2] and first_seen_beat < arg[1].persist then
-					local func = arg[1][1][2] or arg[1][1][1]
-					func(arg[1].func_args)
+			func = function(a, b)
+				if a.persist and first_seen_beat > a.range[2] and first_seen_beat < a.persist then
+					local func = a[1][2] or a[1][1]
+					func(a.func_args)
 				else
-					if first_seen_beat > arg[1].range[2] then return end
-					arg[1][1][1](arg[1].func_args)
+					if first_seen_beat > a.range[2] then return end
+					a[1][1](a.func_args)
 				end
 			end,
 
-			perf = function(...)
-				if first_seen_beat > arg[1].range[2] then return end
-				arg[1][1](arg[2], arg[1].func_args)
+			perf = function(a, b)
+				if first_seen_beat > a.range[2] then return end
+				a[1](b, a.func_args)
 			end,
 
-			ease = function(...)
-				if first_seen_beat > arg[1].range[2] then return end
-				local duration = arg[1].range[2] - arg[1].range[1]
-				local time = arg[2] - arg[1].range[1]
-				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
-				local mod = (arg[1][1] == 'xmod' and percent .. 'x') or (arg[1][1] == 'cmod' and 'c' .. percent) or percent .. ' ' .. arg[1][1]
-				addmods('*-1 ' .. mod, arg[1].player)
+			ease = function(a, b)
+				if first_seen_beat > a.range[2] then return end
+				local duration = a.range[2] - a.range[1]
+				local time = math.min(b, a.range[2]) - a.range[1]
+				local percent = a.ease(time, a.percentage[1], a.percentage[2] - a.percentage[1], duration, unpack(a.args))
+				local mod = (a[1] == 'xmod' and percent .. 'x') or (a[1] == 'cmod' and 'c' .. percent) or percent .. ' ' .. a[1]
+				print(percent, time)
+				addmods('*-1 ' .. mod, a.player)
 			end,
 
-			perfease = function(...)
-				if first_seen_beat > arg[1].range[2] then return end
-				local duration = arg[1].range[2] - arg[1].range[1]
-				local time = math.min(arg[2], arg[1].range[2]) - arg[1].range[1]
-				local percent = arg[1].ease(time, arg[1].percentage[1], arg[1].percentage[2] - arg[1].percentage[1], duration, unpack(arg[1].args))
-				arg[1][1]({value = percent, beat = arg[2]}, arg[1].func_args)
+			perfease = function(a, b)
+				if first_seen_beat > a.range[2] then return end
+				local duration = a.range[2] - a.range[1]
+				local time = math.min(b, a.range[2]) - a.range[1]
+				local percent = a.ease(time, a.percentage[1], a.percentage[2] - a.percentage[1], duration, unpack(a.args))
+				a[1]({value = percent, beat = b}, a.func_args)
 			end
 
 		}
