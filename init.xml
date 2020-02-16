@@ -338,6 +338,7 @@
 		-- see table.concat
 		-- thanks xero
 		addmods = function(string, player)
+			if string == '' then return end
 			if not player then
 				for i = 1, max_players do
 					addmods(string, i)
