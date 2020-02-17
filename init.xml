@@ -392,7 +392,6 @@
 				local time = math.min(b, a.range[2]) - a.range[1]
 				local percent = a.ease(time, a.percentage[1], a.percentage[2] - a.percentage[1], duration, unpack(a.args))
 				local mod = (a[1] == 'xmod' and percent .. 'x') or (a[1] == 'cmod' and 'c' .. percent) or percent .. ' ' .. a[1]
-				print(percent, time)
 				addmods('*-1 ' .. mod, a.player)
 			end,
 
