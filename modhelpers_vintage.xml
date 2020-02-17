@@ -35,7 +35,7 @@ end
 -- oh god oh fuck oh god oh fUCK OH GOD OH FUCK OH FUᖁ ᓕᓱ ᑯᒥᖃᓄ ᓕᓱ ᑐᓕᖁ ᓕᓱ ᑯᒥᖃᓄ
 cering.mod_message = function(start, msg, persist)
 	if type(msg) == 'string' then
-		mod {start, function(str) MESSAGEMAN:Broadcast(str) end, persist = persist, func_args = msg}
+		mod {start, function() MESSAGEMAN:Broadcast(msg) end, persist = persist}
 	else
 		mod {start, msg, persist = persist}
 	end 
@@ -127,7 +127,7 @@ end
 
 exschwasion.mod_message = function(beat, msg, p)
 	if type(msg) == 'string' then
-		mod {beat, function(str) MESSAGEMAN:Broadcast(str) end, persist = p, func_args = msg}
+		mod {beat, function() MESSAGEMAN:Broadcast(msg) end, persist = p}
 	else
 		mod {beat, msg, persist = p}
 	end 
