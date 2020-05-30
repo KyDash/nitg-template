@@ -1,4 +1,4 @@
-<Layer Type="ActorFrame" InitCommand="%function(self)
+<Layer Type="ActorFrame" InitCommand="%m_prefix(function(self)
 	local send = {}
 
 	send.spellcards = function(cards)
@@ -6,7 +6,7 @@
 		
 		local s = GAMESTATE:GetCurrentSong()
 		s:SetNumSpellCards(table.getn(cards))
-		for i=1,table.getn(cards) do
+		for i=1, #cards do
 			local a = cards[i]
 			s:SetSpellCardTiming(i-1,a[1],a[2])
 			s:SetSpellCardName(i-1,a[3])
@@ -27,14 +27,8 @@
 		
 	end
 	
-	local function rgba(r, g, b, a)
-		if type(r) == 'table' then
-			if not r[4] then r[4] = 1 end
-			return {r[1] / 255, r[2] / 255, r[3] / 255, r[4]}
-		else
-			if not a then a = 1 end
-			return r / 255, g / 255, b / 255, a
-		end
+	local function rgb(r, g, b, a)
+		return {r / 255, g / 255, b / 255, a or 1}
 	end
 	-- start, end, name, difficulty, color
 	local spellcards = {
@@ -46,4 +40,4 @@
 	
 	send.spellcards(spellcards)
 	send.labels(labels)
-end"/>
+end)"/>

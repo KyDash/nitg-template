@@ -4,6 +4,6 @@
 end"><children>
 	<Layer Condition="_G.________init == 'fg'" File="../init.xml"/> <!-- load this if fg is loaded first -->
 
-	<Layer File="./mods.xml"/>
+	<Layer File="../lua/mods.xml"/>
 	<Layer Condition="_G.________init == 'bg' and m_prefix.reset()"/> <!-- unload if bg is loaded first -->
 </children></Layer>

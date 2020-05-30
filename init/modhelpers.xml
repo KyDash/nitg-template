@@ -35,10 +35,11 @@ init = true
 		end
 	end
 
-	mod_bounce = function(beat,len,start,apex,str,param)
-		param.hold = param.hold or 0
-		mod {beat, (len/2), tostring(str), start, apex, ease = param.in_ease, pn = param.pn, timing = 'len'}
-		{beat+(len/2)+param.hold, (len/2), tostring(str), apex, start, ease = param.out_ease, pn = param.pn, timing = 'len'}
+	mod_bounce = function(b)
+		b.hold = b.hold or 0
+		mod {b[1], (b[2]/2), b.mod or b[5], b[3], b[4], ease = b.in_ease or b.ease, pn = b.pn, sustain = b.hold, args = b.iargs or b.args}
+		{b[1]+(b[2]/2)+b.hold, (b[2]/2), b.mod or b[5], b[4], b.ev or b[3], ease = b.out_ease or b.ease, pn = b.pn, sustain = b.sustain, args = b.oargs or b.args}
+		return mod_bounce
 	end
 
 	-- s/o to BrotherMojo

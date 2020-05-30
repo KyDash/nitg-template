@@ -24,7 +24,7 @@
 ;
 
 //The majority of simfile scripts and visual effects are stored here.
-#FGCHANGES:0.000=lua=1.000=0=0=1=====,
+#FGCHANGES:0.000=init=1.000=0=0=1=====,
 ;
 
 #KEYSOUNDS:;
