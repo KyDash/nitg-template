@@ -128,6 +128,8 @@ short = {
 	dh = FUCK_EXE and DISPLAY:GetDisplayHeight(),
 }
 
+s = short
+
 player_redir = function(player, player_input)
 	if SCREENMAN:GetTopScreen():GetChild('PlayerP' .. player) and SCREENMAN:GetTopScreen():GetChild('PlayerP' .. player_input) and PREFSMAN:GetPreference('Autoplay') == 0 then
 		SCREENMAN:GetTopScreen():GetChild('PlayerP' .. player):SetInputPlayer(player_input - 1)
@@ -193,6 +195,13 @@ function func_ease_r(values, op)
 		local beat_range = {beat_range[2], beat_range[2]}
 		local f = {values[3], op.func_if_persist}
 		table.insert(mods, {range = beat_range, func = 'func', f, persist = op.persist, func_args = {beat = values[2], value = percentages[2]}})
+	end
+
+	if op.sustain then
+		op.sustain_timing = op.sustain_timing or op.timing
+		local beat_range = {values[2] + (op.timing == 'len' and values[1] or 0), op.sustain + (op.sustain_timing == 'len' and (values[2] + (op.timing == 'len' and values[1] or 0)) or 0)}
+		local f = {values[3]}
+		table.insert(mods, {range = beat_range, func = 'func', f, func_args = {beat = values[2], value = percentages[2]}})
 	end
 end
 
@@ -293,8 +302,8 @@ end
 valid_inserts = {
 	{'number', 'number', 'function', timing = 'string', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', func_args = {'number', 'string', 'function', 'table', 'userdata'}, ret = perframe}, -- perframe
 	{'number', 'function', timing = 'string', persist = {'boolean', 'number'}, func_if_persist = 'function', func_args = {'number', 'string', 'function', 'table', 'userdata'}, ret = func}, -- func
-	{'number', 'number', 'number', 'number', 'function', timing = 'string', ease = 'function', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', args = {'number', 'string', 'function', 'table'}, func_args = {'number', 'string', 'function', 'table', 'userdata'}, ret = func_ease}, -- func ease
-	{'number', 'number', 'function', 'number', 'number', timing = 'string', ease = 'function', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', args = {'number', 'string', 'function', 'table'}, func_args = {'number', 'string', 'function', 'table', 'userdata'}, ret = func_ease_r}, -- func ease
+	{'number', 'number', 'number', 'number', 'function', timing = 'string', ease = 'function', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', args = {'number', 'string', 'function', 'table'}, func_args = {'number', 'string', 'function', 'table', 'userdata'}, sustain = 'number', sustain_timing = 'string', ret = func_ease}, -- func ease
+	{'number', 'number', 'function', 'number', 'number', timing = 'string', ease = 'function', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', args = {'number', 'string', 'function', 'table'}, func_args = {'number', 'string', 'function', 'table', 'userdata'}, sustain = 'number', sustain_timing = 'string', ret = func_ease_r}, -- func ease
 
 	{'number', 'number', 'string', timing = 'string', pn = {'table', 'number'}, ret = s_mod}, -- mod
 	{'number', 'string', pn = {'table', 'number'}, ret = s_mod_once}, -- mod
@@ -369,6 +378,8 @@ addmods = function(string, player)
 		str[player] = {string}
 	end
 end
+
+apply = addmods
 
 applymods = function()
 	for pn = 1, max_players do

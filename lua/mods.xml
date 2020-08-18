@@ -1,5 +1,4 @@
 <Layer Type = "ActorFrame" InitCommand = "%m_prefix(function(self) if init then init = nil return end init = true self:playcommand('Set') end)" SetCommand = "%m_prefix(function(self)
-local s, apply = short, addmods -- TODO actually make / rename those shortcuts in init
 --[==[
 general timed mod/function arguments:
 	mod
@@ -84,6 +83,9 @@ function a()
 
 -- throw all of your mods in this section, you can also directly access players if need be
 mod {0, 9E9, init_mods}
+mod {0, 2, 0, 1, function(t)
+    addmods('*-1 '.. t.value*100 ..' invert')
+end, ease = inOutQuad, sustain = 10}
 
 end end)"
 OnCommand = "queuecommand,Prepare;luaeffect,Update" PrepareCommand = "%m_prefix.set" UpdateCommand = "%m_prefix.update"><children>
