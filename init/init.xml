@@ -299,6 +299,29 @@ function ease_r(values, op)
 	end
 end
 
+do
+	local lookup = {
+		perframe = 1,
+		func = 2,
+		func_ease = {3, 4},
+		mod = 5,
+		mod_single = 6,
+		ease = {7, 8},
+	}
+	function shorthand(which, alias, optional)
+		local lookup = lookup[which]
+		if type(lookup) == 'table' then
+			for i, v in ipairs(lookup) do
+				if not valid_inserts[v].aliases then valid_inserts[v].aliases = {} end
+				valid_inserts[v].aliases[alias] = optional
+			end
+		else
+			if not valid_inserts[lookup].aliases then valid_inserts[lookup].aliases = {} end
+			valid_inserts[lookup].aliases[alias] = optional
+		end
+	end
+end
+
 valid_inserts = {
 	{'number', 'number', 'function', timing = 'string', persist = {'boolean', 'number'}, func_if_persist = 'function', persist_timing = 'string', func_args = {'number', 'string', 'function', 'table', 'userdata'}, ret = perframe}, -- perframe
 	{'number', 'function', timing = 'string', persist = {'boolean', 'number'}, func_if_persist = 'function', func_args = {'number', 'string', 'function', 'table', 'userdata'}, ret = func}, -- func
@@ -312,36 +335,44 @@ valid_inserts = {
 	{'number', 'number', 'string', 'number', 'number', timing = 'string', ease = 'function' , pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease_r}, -- another ease mod
 }
 
-function type_check(v)
-	if type(v) == 'table' then
-		for which, t in ipairs(valid_inserts) do
-			local count = table.getn(v)
-			local values = {}
-			for i, k in ipairs(v) do
-				if type(k) == t[i] then
-					values[i] = k
+function validate(data) -- contains mod data that will be passed into a function dependand on it's need
+	if type(data) == 'table' then -- make sure we're dealing with a table to begin with
+		for _, which in ipairs(valid_inserts) do -- run through a list of valid templates
+			local final = table.getn(data) -- size of the non optional information a mod call has passed in
+			local valid_values = {} -- store the valid information to pass in the return value of the current template
+			for pos, value in ipairs(data) do -- run through the data passed in
+				if type(value) == which[pos] then -- check if the value type matches what is expected for the current template
+					valid_values[pos] = value -- value at position matches
 				else
-					break
+					break -- otherwise move on to chack the next valid template
 				end
-				if i == count then
-					local optionals = {}
-					for m, n in pairs(v) do
-						if type(m) ~= 'number' then
-							if type(t[m]) == 'table' then
-								for _, j in ipairs(t[m]) do
-									if type(n) == j then
-										optionals[m] = n
+				if pos == final then -- if we successfully run through the required types
+					local optional_values = {} -- move on to optional values that can be used
+					if which.aliases then -- if we create shorthandles for this entry
+						for shorthand, aliases_to in pairs(which.aliases) do -- link up shorthandles to an optional entry
+							if data[shorthand] then
+								data[aliases_to] = data[shorthand]
+							end
+						end
+					end
+					for opt_pos, opt_value in pairs(data) do
+						print(pos, value, opt_pos, opt_value)
+						if type(opt_pos) ~= 'number' then -- don't recheck required values, as they are already valid
+							if type(which[opt_pos]) == 'table' then -- if our optional value is a table, run through the data possibilities
+								for _, opt_type in ipairs(which[opt_pos]) do
+									if type(opt_value) == opt_type then -- if the optional type is a valid type
+										optional_values[opt_pos] = opt_value -- add it in to the list of optional values
 										break
 									end
 								end
 							else
-								if type(n) == t[m] then
-									optionals[m] = n
+								if type(opt_value) == which[opt_pos] then -- validate if there can only be a single valid type
+									optional_values[opt_pos] = opt_value
 								end
 							end
 						end
 					end
-					local r, err = pcall(t.ret,values, optionals)
+					local r, err = pcall(which.ret, valid_values, optional_values)
 					if not r then
 						error(err, 3)
 					end
@@ -349,14 +380,14 @@ function type_check(v)
 				end
 			end
 		end
-		error('Invalid entry: ' .. print(v), 3)
+		error('Invalid entry: ' .. print(data), 3)
 	else
 		error('Not a table', 3)
 	end
 end
 
-function mod(v)
-	type_check(v)
+function mod(data)
+	validate(data)
 	return mod
 end
 
