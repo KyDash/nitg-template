@@ -145,6 +145,7 @@ end
 function perframe(values, op)
 	op.timing = op.timing or default.timing
 	local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
+	op.func_args = op.func_args and (type(op.func_args) == 'table' and op.func_args or {op.func_args}) or {}
 
 	table.insert(mods, {range = beat_range, func = 'perf', values[3]})
 	if op.persist and first_seen_beat > beat_range[2] then
@@ -153,7 +154,7 @@ function perframe(values, op)
 		op.persist = (op.persist or 0.1) + (op.persist_timing == 'len' and values[2] or 0)
 		local beat_range = {beat_range[2], beat_range[2]}
 		local f = {values[3], op.func_if_persist}
-		table.insert(mods, {range = beat_range, func = 'func', f, persist = op.persist})
+		table.insert(mods, {range = beat_range, func = 'func', f, persist = op.persist, func_args = beat_range[2]})
 	end
 end
 
@@ -332,7 +333,7 @@ valid_inserts = {
 	{'number', 'string', pn = {'table', 'number'}, ret = s_mod_once}, -- mod
 	
 	{'number', 'number', 'number', 'number', 'string', timing = 'string', ease = 'function', pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease}, -- ease mod
-	{'number', 'number', 'string', 'number', 'number', timing = 'string', ease = 'function' , pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease_r}, -- another ease mod
+	{'number', 'number', 'string', 'number', 'number', timing = 'string', ease = 'function', pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease_r}, -- another ease mod
 }
 
 function validate(data) -- contains mod data that will be passed into a function dependand on it's need
@@ -356,7 +357,6 @@ function validate(data) -- contains mod data that will be passed into a function
 						end
 					end
 					for opt_pos, opt_value in pairs(data) do
-						print(pos, value, opt_pos, opt_value)
 						if type(opt_pos) ~= 'number' then -- don't recheck required values, as they are already valid
 							if type(which[opt_pos]) == 'table' then -- if our optional value is a table, run through the data possibilities
 								for _, opt_type in ipairs(which[opt_pos]) do
