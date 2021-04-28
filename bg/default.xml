@@ -1,14 +1,17 @@
 <Layer Type="ActorFrame" InitCommand="%function(self)
 	if not _G.________init then _G.________init = 'bg' end
 	self:sleep(9E9)
-end"><children>
+	self:SetFarDist(10000000000000000)
+end" Name = "bg"><children>
 	<Layer Condition="_G.________init == 'bg'" File="../init/init.xml"/> <!-- load this if bg is loaded first -->
-	<!-- bg things go here -->
+	<!-- bg things go here -->	
+
+	<!-- Place all bg elements above this line -->
 	<!-- Load judgment and combo proxies in the bg -->
-	<Layer Type = "ActorProxy" OnCommand="queuecommand,Set" SetCommand = "%m_prefix(function(self) combo[1] = self end)" />
-	<Layer Type = "ActorProxy" OnCommand="queuecommand,Set" SetCommand = "%m_prefix(function(self) combo[2] = self end)" />
-	<Layer Type = "ActorProxy" OnCommand="queuecommand,Set" SetCommand = "%m_prefix(function(self) judgment[1] = self end)" />
-	<Layer Type = "ActorProxy" OnCommand="queuecommand,Set" SetCommand = "%m_prefix(function(self) judgment[2] = self end)" />
+	<Layer Type = "ActorProxy" OnCommand="playcommand,Set" SetCommand = "%m_prefix(function(self) combo[1] = self end)" />
+	<Layer Type = "ActorProxy" OnCommand="playcommand,Set" SetCommand = "%m_prefix(function(self) combo[2] = self end)" />
+	<Layer Type = "ActorProxy" OnCommand="playcommand,Set" SetCommand = "%m_prefix(function(self) judgment[1] = self end)" />
+	<Layer Type = "ActorProxy" OnCommand="playcommand,Set" SetCommand = "%m_prefix(function(self) judgment[2] = self end)" />
 
 	<Layer Condition="_G.________init == 'fg' and m_prefix.reset()"/> <!-- unload if fg is loaded first -->
 </children></Layer>

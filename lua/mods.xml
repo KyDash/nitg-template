@@ -75,16 +75,78 @@ how to use:
 		{0, 10, 'tipsy', 0, 100, ease = inOutCirc}
 		{4, function() print('hi') end}
 		etc, etc
+
+SPELLCARDS:
+	spellcard
+		{beat start, beat end, 'name', difficulty, {r, g, b [, a]}} OR
+
+	notes
+		the colour arguments of (r)ed (g)een and (b)lue ({r, g, b}) accept values between 0 and 255, an optional parameter: (a)lpha can be passed within the colour table and accepts a float value between 0 and 1
+		any of the `name`, `difficulty`, and `colour` values can be encased within a {table} to make it difficulty specific, and accepts five arguments in order: {novice, easy, medium, hard, expert, edit}
+		difficulty is the selected p1 difficulty, unless non-present, otherwise p2
+
+how to use:
+	preface your new spellcard with the keyword `spellcard`, followed by it's arguments detailed above
+		spellcard {0, 10, 'this is a spellcard', 80, {60, 90, 100}}
+	like `mod` spellcard entires can also be chained:
+		spellcard
+		{0, 10, 'foo', 4, {0, 400, 20}}
+		{30, 80, 'bar', 20, {0, math.random(0, 255), 0}}
+
+	example of a difficulty specific spellcard with difficulty specific spellcard difficulties
+		spellcard {68, 421, 'geoff', {0, 0, 2, 4, 8, 11, 16}, {0, 0, 0}}
+
+LIST OF EASES
+	persistent eases (start percentage -> end percentage)
+		linear
+		instant
+		inQuad,		outQuad,	inOutQuad,		outInQuad
+		inCubic,	outCubic,	inOutCubic,		outInCubic
+		inQuart,	outQuart,	inOutQuart,		outInQuart
+		inQuint,	outQuint,	inOutQuint,		outInQuint
+		inExpo,		outExpo,	inOutExpo,		outInExpo
+		inCirc,		outCirc,	inOutCirc,		outInCirc
+		inElastic,	outElastic,	inOutElastic,	outInElastic
+		inBack,		outBack,	inOutBack,		outInBack
+		inBounce,	outBounce,	inOutBounce,	outInBounce
+		ss,			sss,		ssss
+
+	transient eases (start percentage -> end percentage -> start percentage)
+		bounce
+		tri
+		bell
+		pop
+		tap
+		pulse
+		spike
+		inverse
+		square
 ]==]
 
-init_mods = 'clearall, *-1 overhead, *-1 2x, *-1 zbuffer, approachtype' -- this string are mods that are going to be applied BEFORE beat 0
-GAMESTATE:ApplyModifiers(init_mods)
-function a()
+default.behavior(exschwasion)
+plr, timing, ease = nil, nil, nil
+-- potentially useful shorthandles
+shorthand
+{type = 'perframe', option = 'timing'}'t''mode''m'
+{option = 'persist', 'p'}
+{option = 'persist_timing'}'pt''persist_mode''pm'
+{option = 'func_if_persist'}'func''f'
 
--- throw all of your mods in this section, you can also directly access players if need be
-mod {0, 9E9, init_mods}
+{type = 'ease', option = 'ease'}'e''tween'
+{option = 'timing'}'t''mode''m'
+{option = 'sustain'}'sus''s''persist''p'
+{option = 'sustain_timing'}'sust''st''persist_timing''pt''sustain_mode''susm''sm''persist_mode''pm'
+
+{type = 'func_ease', option = 'ease'}'e''tween'
+{option = 'persist', 'p'}
+{option = 'persist_timing'}'pt''persist_mode''pm'
+{option = 'func_if_persist'}'func''f'
+init_mods = 'clearall, *-1 overhead, *-1 2x, *-1 zbuffer, approachtype, dizzyholds' -- this string contains the mods that are going to be applied BEFORE beat 0
+GAMESTATE:ApplyModifiers(init_mods)
+
+function a()
+-- if you need access to players outside of the scope of mod {}, you can do so here
 
 end end)"
-OnCommand = "queuecommand,Prepare;luaeffect,Update" PrepareCommand = "%m_prefix.set" UpdateCommand = "%m_prefix.update"><children>
-
+OnCommand = "queuecommand,Prepare;luaeffect,Update" ScreenReadyCommand = "playcommand,Prepare;luaeffect,Update" PrepareCommand = "%m_prefix.set" UpdateCommand = "%m_prefix.update"><children>
 </children></Layer>

@@ -2,12 +2,6 @@
 if init then init = nil return end -- prevent init frum running twice
 init = true
 
-ease = {}
-
----------------------------------------------------------------------------------------
-----------------------DON'T TOUCH IT KIDDO---------------------------------------------
----------------------------------------------------------------------------------------
-		
 -- Adapted from
 -- Tweener's easing functions (Penner's Easing Equations)
 -- and http://code.google.com/p/tweener/ (jstweener javascript version)
@@ -33,10 +27,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND 
 ]]
 
 -- For all easing functions:
--- t = elapsed time
--- b = begin
--- c = change == ending - beginning
--- d = duration (total time)
+-- t = elapsed time from 0 to 1
 
 local pow = math.pow
 local sin = math.sin
@@ -45,367 +36,233 @@ local pi = math.pi
 local sqrt = math.sqrt
 local abs = math.abs
 local asin	= math.asin
+local exp = math.exp
 
-function ease.linear(t, b, c, d)
-	return c * t / d + b
-end
+function linear(t) return t end
 
-function ease.inQuad(t, b, c, d)
-	t = t / d
-	return c * pow(t, 2) + b
-end
-
-function ease.outQuad(t, b, c, d)
-	t = t / d
-	return -c * t * (t - 2) + b
-end
-
-function ease.inOutQuad(t, b, c, d)
-	t = t / d * 2
+function inQuad(t) return t * t end
+function outQuad(t) return -t * (t - 2) end
+function inOutQuad(t)
+	t = t * 2
 	if t < 1 then
-		return c / 2 * pow(t, 2) + b
+		return inQuad(t, a, p) * 0.5
 	else
-		return -c / 2 * ((t - 1) * (t - 3) - 1) + b
+		return outQuad(t - 1, a, p) * 0.5 + 0.5
 	end
 end
-
-function ease.outInQuad(t, b, c, d)
-	if t < d / 2 then
-		return ease.outQuad (t * 2, b, c / 2, d)
-	else
-		return ease.inQuad((t * 2) - d, b + c / 2, c / 2, d)
-	end
-end
-
-function ease.inCubic (t, b, c, d)
-	t = t / d
-	return c * pow(t, 3) + b
-end
-
-function ease.outCubic(t, b, c, d)
-	t = t / d - 1
-	return c * (pow(t, 3) + 1) + b
-end
-
-function ease.inOutCubic(t, b, c, d)
-	t = t / d * 2
+function outInQuad(t)
+	t = t * 2
 	if t < 1 then
-		return c / 2 * t * t * t + b
+		return outQuad(t, a, p) * 0.5
 	else
-		t = t - 2
-		return c / 2 * (t * t * t + 2) + b
+		return inQuad(t - 1, a, p) * 0.5 + 0.5
 	end
 end
 
-function ease.outInCubic(t, b, c, d)
-	if t < d / 2 then
-		return ease.outCubic(t * 2, b, c / 2, d)
-	else
-		return ease.inCubic((t * 2) - d, b + c / 2, c / 2, d)
-	end
-end
-
-function ease.inQuart(t, b, c, d)
-	t = t / d
-	return c * pow(t, 4) + b
-end
-
-function ease.outQuart(t, b, c, d)
-	t = t / d - 1
-	return -c * (pow(t, 4) - 1) + b
-end
-
-function ease.inOutQuart(t, b, c, d)
-	t = t / d * 2
+function inCubic(t) return t * t * t end
+function outCubic(t) return 1 - (1 - t) ^ 3 end
+function inOutCubic(t)
+	t = t * 2
 	if t < 1 then
-		return c / 2 * pow(t, 4) + b
+		return inCubic(t, a, p) * 0.5
 	else
-		t = t - 2
-		return -c / 2 * (pow(t, 4) - 2) + b
+		return outCubic(t - 1, a, p) * 0.5 + 0.5
 	end
 end
-
-function ease.outInQuart(t, b, c, d)
-	if t < d / 2 then
-		return ease.outQuart(t * 2, b, c / 2, d)
-	else
-		return ease.inQuart((t * 2) - d, b + c / 2, c / 2, d)
-	end
-end
-
-function ease.inQuint(t, b, c, d)
-	t = t / d
-	return c * pow(t, 5) + b
-end
-
-function ease.outQuint(t, b, c, d)
-	t = t / d - 1
-	return c * (pow(t, 5) + 1) + b
-end
-
-function ease.inOutQuint(t, b, c, d)
-	t = t / d * 2
+function outInCubic(t)
+	t = t * 2
 	if t < 1 then
-		return c / 2 * pow(t, 5) + b
+		return outCubic(t, a, p) * 0.5
 	else
-		t = t - 2
-		return c / 2 * (pow(t, 5) + 2) + b
+		return inCubic(t - 1, a, p) * 0.5 + 0.5
 	end
 end
 
-function ease.outInQuint(t, b, c, d)
-	if t < d / 2 then
-		return ease.outQuint(t * 2, b, c / 2, d)
-	else
-		return ease.inQuint((t * 2) - d, b + c / 2, c / 2, d)
-	end
-end
-
-function ease.inSine(t, b, c, d)
-	return -c * cos(t / d * (pi / 2)) + c + b
-end
-
-function ease.outSine(t, b, c, d)
-	return c * sin(t / d * (pi / 2)) + b
-end
-
-function ease.inOutSine(t, b, c, d)
-	return -c / 2 * (cos(pi * t / d) - 1) + b
-end
-
-function ease.outInSine(t, b, c, d)
-	if t < d / 2 then
-		return ease.outSine(t * 2, b, c / 2, d)
-	else
-		return ease.inSine((t * 2) -d, b + c / 2, c / 2, d)
-	end
-end
-
-function ease.inExpo(t, b, c, d)
-	if t == 0 then
-		return b
-	else
-		return c * pow(2, 10 * (t / d - 1)) + b - c * 0.001
-	end
-end
-
-function ease.outExpo(t, b, c, d)
-	if t == d then
-		return b + c
-	else
-		return c * 1.001 * (-pow(2, -10 * t / d) + 1) + b
-	end
-end
-
-function ease.inOutExpo(t, b, c, d)
-	if t == 0 then return b end
-	if t == d then return b + c end
-	t = t / d * 2
+function inQuart(t) return t * t * t * t end
+function outQuart(t) return 1 - (1 - t) ^ 4 end
+function inOutQuart(t)
+	t = t * 2
 	if t < 1 then
-		return c / 2 * pow(2, 10 * (t - 1)) + b - c * 0.0005
+		return inQuart(t, a, p) * 0.5
 	else
-		t = t - 1
-		return c / 2 * 1.0005 * (-pow(2, -10 * t) + 2) + b
+		return outQuart(t - 1, a, p) * 0.5 + 0.5
 	end
 end
-
-function ease.outInExpo(t, b, c, d)
-	if t < d / 2 then
-		return ease.outExpo(t * 2, b, c / 2, d)
-	else
-		return ease.inExpo((t * 2) - d, b + c / 2, c / 2, d)
-	end
-end
-
-function ease.inCirc(t, b, c, d)
-	t = t / d
-	return(-c * (sqrt(1 - pow(t, 2)) - 1) + b)
-end
-
-function ease.outCirc(t, b, c, d)
-	t = t / d - 1
-	return(c * sqrt(1 - pow(t, 2)) + b)
-end
-
-function ease.inOutCirc(t, b, c, d)
-	t = t / d * 2
+function outInQuart(t)
+	t = t * 2
 	if t < 1 then
-		return -c / 2 * (sqrt(1 - t * t) - 1) + b
+		return outQuart(t, a, p) * 0.5
 	else
-		t = t - 2
-		return c / 2 * (sqrt(1 - t * t) + 1) + b
+		return inQuart(t - 1, a, p) * 0.5 + 0.5
 	end
 end
 
-function ease.outInCirc(t, b, c, d)
-	if t < d / 2 then
-		return ease.outCirc(t * 2, b, c / 2, d)
+function inQuint(t) return t ^ 5 end
+function outQuint(t) return 1 - (1 - t) ^ 5 end
+function inOutQuint(t)
+	t = t * 2
+	if t < 1 then
+		return inQuint(t, a, p) * 0.5
 	else
-		return ease.inCirc((t * 2) - d, b + c / 2, c / 2, d)
+		return outQuint(t - 1, a, p) * 0.5 + 0.5
+	end
+end
+function outInQuint(t)
+	t = t * 2
+	if t < 1 then
+		return outQuint(t, a, p) * 0.5
+	else
+		return inQuint(t - 1, a, p) * 0.5 + 0.5
 	end
 end
 
-function ease.inElastic(t, b, c, d, a, p)
-	if t == 0 then return b end
-
-	t = t / d
-
-	if t == 1	then return b + c end
-
-	if not p then p = d * 0.3 end
-
-	local s
-
-	if not a or a < abs(c) then
-		a = c
-		s = p / 4
+function inSine(t) return 1 - cos(t * (pi * 0.5)) end
+function outSine(t) return sin(t * (pi * 0.5)) end
+function inOutSine(t)
+	t = t * 2
+	if t < 1 then
+		return inSine(t, a, p) * 0.5
 	else
-		s = p / (2 * pi) * asin(c/a)
+		return outSine(t - 1, a, p) * 0.5 + 0.5
 	end
-
-	t = t - 1
-
-	return -(a * pow(2, 10 * t) * sin((t * d - s) * (2 * pi) / p)) + b
+end
+function outInSine(t)
+	t = t * 2
+	if t < 1 then
+		return outSine(t, a, p) * 0.5
+	else
+		return inSine(t - 1, a, p) * 0.5 + 0.5
+	end
 end
 
--- a: amplitud
+function inExpo(t) return 1000 ^ (t - 1) - 0.001 end
+function outExpo(t) return 0.999 - 1000 ^ -t end
+function inOutExpo(t)
+	t = t * 2
+	if t < 1 then
+		return inExpo(t, a, p) * 0.5
+	else
+		return outExpo(t - 1, a, p) * 0.5 + 0.5
+	end
+end
+function outInExpo(t)
+	t = t * 2
+	if t < 1 then
+		return outExpo(t, a, p) * 0.5
+	else
+		return inExpo(t - 1, a, p) * 0.5 + 0.5
+	end
+end
+
+function inCirc(t) return 1 - sqrt(1 - t * t) end
+function outCirc(t) return sqrt(-t * t + 2 * t) end
+function inOutCirc(t)
+	t = t * 2
+	if t < 1 then
+		return inCirc(t, a, p) * 0.5
+	else
+		return outCirc(t - 1, a, p) * 0.5 + 0.5
+	end
+end
+function outInCirc(t)
+	t = t * 2
+	if t < 1 then
+		return outCirc(t, a, p) * 0.5
+	else
+		return inCirc(t - 1, a, p) * 0.5 + 0.5
+	end
+end
+
+-- a: amplitude
 -- p: period
-function ease.outElastic(t, b, c, d, a, p)
-	if t == 0 then return b end
-
-	t = t / d
-
-	if t == 1 then return b + c end
-
-	if not p then p = d * 0.3 end
-
-	local s
-
-	if not a or a < abs(c) then
-		a = c
-		s = p / 4
-	else
-		s = p / (2 * pi) * asin(c/a)
-	end
-
-	return a * pow(2, -10 * t) * sin((t * d - s) * (2 * pi) / p) + c + b
+function inElastic(t, a, p)
+	p, a, t = p or 0.3, a or 1, t - 1
+	return -(a * pow(2, 10 * t) * sin((t - (p / (2 * pi) * asin(1 / a))) * (2 * pi) / p))
 end
-
--- p = period
--- a = amplitud
-function ease.inOutElastic(t, b, c, d, a, p)
-	if t == 0 then return b end
-
-	t = t / d * 2
-
-	if t == 2 then return b + c end
-
-	if not p then p = d * (0.3 * 1.5) end
-	if not a then a = 0 end
-
-	local s
-
-	if not a or a < abs(c) then
-		a = c
-		s = p / 4
-	else
-		s = p / (2 * pi) * asin(c / a)
-	end
-
+function outElastic(t, a, p)
+	p, a = p or 0.3, a or 1
+	return a * pow(2, -10 * t) * sin((t - (p / (2 * pi) * asin(1 / a))) * (2 * pi) / p) + 1
+end
+function inOutElastic(t, a, p)
+	t = t * 2
 	if t < 1 then
-		t = t - 1
-		return -0.5 * (a * pow(2, 10 * t) * sin((t * d - s) * (2 * pi) / p)) + b
+		return inElastic(t, a, p) * 0.5
 	else
-		t = t - 1
-		return a * pow(2, -10 * t) * sin((t * d - s) * (2 * pi) / p ) * 0.5 + c + b
+		return outElastic(t - 1, a, p) * 0.5 + 0.5
 	end
 end
-
--- a: amplitud
--- p: period
-function ease.outInElastic(t, b, c, d, a, p)
-	if t < d / 2 then
-		return ease.outElastic(t * 2, b, c / 2, d, a, p)
-	else
-		return ease.inElastic((t * 2) - d, b + c / 2, c / 2, d, a, p)
-	end
-end
-
-function ease.inBack(t, b, c, d, s)
-	if not s then s = 1.70158 end
-	t = t / d
-	return c * t * t * ((s + 1) * t - s) + b
-end
-
-function ease.outBack(t, b, c, d, s)
-	if not s then s = 1.70158 end
-	t = t / d - 1
-	return c * (t * t * ((s + 1) * t + s) + 1) + b
-end
-
-function ease.inOutBack(t, b, c, d, s)
-	if not s then s = 1.70158 end
-	s = s * 1.525
-	t = t / d * 2
+function outInElastic(t, a, p)
+	t = t * 2
 	if t < 1 then
-		return c / 2 * (t * t * ((s + 1) * t - s)) + b
+		return outElastic(t, a, p) * 0.5
 	else
-		t = t - 2
-		return c / 2 * (t * t * ((s + 1) * t + s) + 2) + b
+		return inElastic(t - 1, a, p) * 0.5 + 0.5
 	end
 end
 
-function ease.outInBack(t, b, c, d, s)
-	if t < d / 2 then
-		return ease.outBack(t * 2, b, c / 2, d, s)
+function outBack(t, s) s = s or 1.70158 return ((t - 1) * (t - 1) * ((s + 1) * (t - 1) + s) + 1) end
+function inBack(t, s) s = s or 1.70158 return t * t * ((s + 1) * t - s) end
+function inOutBack(t, s)
+	t = t * 2
+	if t < 1 then
+		return inBack(t, s) * 0.5
 	else
-		return ease.inBack((t * 2) - d, b + c / 2, c / 2, d, s)
+		return outBack(t - 1, s) * 0.5 + 0.5
+	end
+end
+function outInBack(t, s)
+	t = t * 2
+	if t < 1 then
+		return outBack(t, s) * 0.5
+	else
+		return inBack(t - 1, s) * 0.5 + 0.5
 	end
 end
 
-function ease.outBounce(t, b, c, d)
-	t = t / d
-	if t < 1 / 2.75 then
-		return c * (7.5625 * t * t) + b
-	elseif t < 2 / 2.75 then
-		t = t - (1.5 / 2.75)
-		return c * (7.5625 * t * t + 0.75) + b
-	elseif t < 2.5 / 2.75 then
-		t = t - (2.25 / 2.75)
-		return c * (7.5625 * t * t + 0.9375) + b
+function outBounce(t)
+	if t < 1 / 2.75 then return 7.5625 * t * t
+	elseif t < 2 / 2.75 then t = t - 1.5 / 2.75 return 7.5625 * t * t + 0.75
+	elseif t < 2.5 / 2.75 then t = t - 2.25 / 2.75 return 7.5625 * t * t + 0.9375
+	else t = t - 2.625 / 2.75 return 7.5625 * t * t + 0.984375 end
+end
+function inBounce(t) return 1 - outBounce(1 - t) end
+function inOutBounce(t, b, c, d)
+	t = t * 2
+	if t < 1 then
+		return inBounce(t, s) * 0.5
 	else
-		t = t - (2.625 / 2.75)
-		return c * (7.5625 * t * t + 0.984375) + b
+		return outBounce(t - 1, s) * 0.5 + 0.5
 	end
 end
-
-function ease.inBounce(t, b, c, d)
-	return c - ease.outBounce(d - t, 0, c, d) + b
-end
-
-function ease.inOutBounce(t, b, c, d)
-	if t < d / 2 then
-		return ease.inBounce(t * 2, 0, c, d) * 0.5 + b
+function outInBounce(t, b, c, d)
+	t = t * 2
+	if t < 1 then
+		return outBounce(t, s) * 0.5
 	else
-		return ease.outBounce(t * 2 - d, 0, c, d) * 0.5 + c * .5 + b
+		return inBounce(t - 1, s) * 0.5 + 0.5
 	end
 end
+-- TODO rework this
+-- function flicker(t) if t == 1 then return 0 end return floor(GAMESTATE:GetSongTime() * 60) % 2 end
 
-function ease.outInBounce(t, b, c, d)
-	if t < d / 2 then
-		return ease.outBounce(t * 2, b, c / 2, d)
-	else
-		return ease.inBounce((t * 2) - d, b + c / 2, c / 2, d)
-	end
-end
+-- transiant eases courtesy of XeroOl's notitg-mirin template
+function instant() return 1 end
+function bounce(t) return 4 * t * (1 - t) end
+function tri(t) return 1 - abs(2 * t - 1) end
+function bell(t) return inOutQuint(tri(t)) end
+function pop(t) return 3.5 * (1 - t) * (1 - t) * sqrt(t) end
+function tap(t) return 3.5 * t * t * sqrt(1 - t) end
+function pulse(t) return t < .5 and tap(t * 2) or -pop(t * 2 - 1) end
 
-for i, v in pairs(ease) do
-	m_prefix[i] = v
-end
+function spike(t) return exp(-10 * abs(2 * t - 1)) end
+function inverse(t) return t * t * (1 - t) * (1 - t) / (0.5 - t) end
 
----------------------------------------------------------------------------------------
-----------------------END DON'T TOUCH IT KIDDO-----------------------------------------
----------------------------------------------------------------------------------------
-	
+function square(t) return t == 1 and 0 or 1 end
+
+-- smooth step, super smooth step and super super smooth step
+-- courtesy of RB2
+function ss(t) return 3 * t ^ 2 - 2 * t ^ 3 end
+function sss(t) return t ^ 5 * (5 * t * (t * (7 * t * (2 * t - 9) + 108) - 84) + 126) end
+function ssss(t) return t ^ 7 * 1716 + 7 * t ^ 8 * (2 * t * (3 * t * (t * (11 * t * (2 * t - 13) + 390) - 572) + 1430) - 1287) end
 end)"
 />

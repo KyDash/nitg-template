@@ -1,0 +1,33 @@
+<Layer Type="ActorFrame" InitCommand="%m_prefix(function(self) if init then init = nil return end init = true
+	spellcard = setmetatable({}, {__call = function(self, card) table.insert(spellcard, card) return spellcard end})
+	local function gsub(self, pattern, replace, limit)
+		return string.gsub(self, pattern, replace, limit)
+	end
+	local function rgb(c)
+		if type(c) == 'string' then
+			local t = {}
+			string.gsub(c, '[a-f0-9][0-9a-f]', function(c) table.insert(t, tonumber(c, 16)) return t end)
+			return rgb(t)
+		end
+		return c[1] / 255, c[2] / 255, c[3] / 255, (c[4] or 1)
+	end
+	spellcard.send = function()
+		local cards = spellcard
+		if #cards == 0 then return false end
+		local song = GAMESTATE:GetCurrentSong()
+		local diff = GAMESTATE:GetCurrentSteps(0) or GAMESTATE:GetCurrentSteps(1)
+		diff = diff:GetDifficulty() + 1
+		song:SetNumSpellCards(#cards)
+
+		for i, card in ipairs(cards) do
+			local name = type(card[3]) == 'table' and tostring(card[3][diff]) or tostring(card[3]) 
+			local difficulty = type(card[4]) == 'table' and card[4][diff] or card[4]
+			local color = (type(card[5]) == 'table' and type(card[5][1]) == 'table' and card[5][diff]) or card[5]
+
+			song:SetSpellCardTiming(i - 1, card[1], card[2])
+			song:SetSpellCardName(i - 1, name)
+			song:SetSpellCardDifficulty(i - 1, difficulty)
+			song:SetSpellCardColor(i - 1, rgb(color))
+		end		
+	end
+end)"/>

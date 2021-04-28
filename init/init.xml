@@ -3,6 +3,7 @@ if _G.________loaded then _G.________loaded = nil return end
 _G.________loaded = true
 local m_prefix = setmetatable({}, { __index = _G, __call = function(self, a) setfenv(a, self) return a end })
 setfenv(1, m_prefix)
+logging = false
 
 do
 	function table_scrape(table, prefix, depth)
@@ -66,6 +67,7 @@ do
 		GAMESTATE:ApplyModifiers(speed[2], 2)
 		self:luaeffect''
 	end
+	
 
 	debug = setmetatable(
 		{},
@@ -74,6 +76,8 @@ do
 			__call = function() return _debug.is_used end
 		}
 	)
+	debug.print = logging and print or function() return end -- don't actually trigger debugging features for printing as it's not intrusive in gameplay
+	-- TODO need to restructure so there's a clear difference between template debugging and mod debugging
 end
 
 mods = {}
@@ -85,10 +89,15 @@ origins = {} -- table that contains original values of players and elements
 judgment = {}
 combo = {}
 available_players = {} 
+player = players
+p = players
+origin = origins
+o = origins
 
+-- populate player related tables with one table per player
 for pn = 1, max_players do
-	table.insert(players, {}) -- add a table in the players table for players 1 to 2
-	table.insert(origins, {}) -- add a table in the origins table for players 1 to 2
+	table.insert(players, {})
+	table.insert(origins, {})
 end
 
 e, l = 'end', 'len'
@@ -96,7 +105,7 @@ e, l = 'end', 'len'
 default = {
 	timing = 'len',
 	player = {},
-	ease = function(t, b, c, d) return c * t / d + b end,
+	ease = function(t) return t end,
 	behavior = function(table)
 		if table then setmetatable(table, {__index = _G}) end
 		local t = getmetatable(m_prefix)
@@ -142,8 +151,9 @@ for i = 1, max_players do
 	table.insert(default.player, i)
 end
 
+plr, timing, ease = nil, nil, nil
 function perframe(values, op)
-	op.timing = op.timing or default.timing
+	op.timing = op.timing or timing or default.timing
 	local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
 	op.func_args = op.func_args and (type(op.func_args) == 'table' and op.func_args or {op.func_args}) or {}
 
@@ -159,8 +169,7 @@ function perframe(values, op)
 end
 
 function func(values, op)
-
-	op.timing = op.timing or default.timing
+	op.timing = op.timing or timing or default.timing
 
 	if op.persist and type(op.persist) == 'boolean' then op.persist = 9E9 end
 	op.persist = (op.persist or 0.1) + (op.timing == 'len' and values[1] or 0)
@@ -179,8 +188,8 @@ function func_ease(values, op)
 end
 
 function func_ease_r(values, op)
-	op.timing = op.timing or default.timing
-	op.ease = op.ease or default.ease
+	op.timing = op.timing or timing or default.timing
+	op.ease = op.ease or ease or default.ease
 	local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
 
 	local percentages = {values[4], values[5]}
@@ -207,8 +216,8 @@ function func_ease_r(values, op)
 end
 
 function s_mod(values, op)
-	op.timing = op.timing or default.timing
-	op.pn = op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or default.player
+	op.timing = op.timing or timing or default.timing
+	op.pn = (op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or plr and (type(plr) == 'table' and plr or {plr})) or default.player
 	local NOT_flag = op.pn[1] < 0
 	if NOT_flag then
 		local temp = {}
@@ -232,8 +241,8 @@ function s_mod(values, op)
 end
 
 function s_mod_once(values, op)
-	op.timing = op.timing or default.timing
-	op.pn = op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or default.player
+	-- op.timing = op.timing or default.timing
+	op.pn = (op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or plr and (type(plr) == 'table' and plr or {plr})) or default.player
 	local NOT_flag = op.pn[1] < 0
 	if NOT_flag then
 		local temp = {}
@@ -264,8 +273,8 @@ function ease(values, op)
 end
 
 function ease_r(values, op)
-	op.timing = op.timing or default.timing
-	op.pn = op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or default.player
+	op.timing = op.timing or timing or default.timing
+	op.pn = (op.pn and (type(op.pn) == 'table' and op.pn or {op.pn}) or plr and (type(plr) == 'table' and plr or {plr})) or default.player
 	local NOT_flag = op.pn[1] < 0
 	if NOT_flag then
 		local temp = {}
@@ -281,7 +290,7 @@ function ease_r(values, op)
 		end
 		op.pn = temp
 	end
-	op.ease = op.ease or default.ease
+	op.ease = op.ease or ease or default.ease
 	local beat_range = {values[1], values[2] + (op.timing == 'len' and values[1] or 0)} -- convert times to end
 	local mod = values[3]
 	local percentages = {values[4], values[5]}
@@ -309,17 +318,24 @@ do
 		mod_single = 6,
 		ease = {7, 8},
 	}
-	function shorthand(which, alias, optional)
-		local lookup = lookup[which]
-		if type(lookup) == 'table' then
+	-- [type.]which, [option].name, alias name
+	local Type, option, alias
+	function shorthand(t)
+		ist = type(t) == 'table'
+		Type, option, alias = ist and t.type or Type, ist and t.option or option, ist and t[1] or t
+		if ist and not t[1] then return shorthand end
+		local lookup = lookup[Type]
+		if type(lookup) == 'table' then 
 			for i, v in ipairs(lookup) do
 				if not valid_inserts[v].aliases then valid_inserts[v].aliases = {} end
-				valid_inserts[v].aliases[alias] = optional
+				valid_inserts[v].aliases[alias] = option
 			end
 		else
 			if not valid_inserts[lookup].aliases then valid_inserts[lookup].aliases = {} end
-			valid_inserts[lookup].aliases[alias] = optional
+			valid_inserts[lookup].aliases[alias] = option
 		end
+		debug.print('Shorthand \'' .. alias .. '\' created for ' .. Type .. ' - ' .. option)
+		return shorthand
 	end
 end
 
@@ -333,7 +349,7 @@ valid_inserts = {
 	{'number', 'string', pn = {'table', 'number'}, ret = s_mod_once}, -- mod
 	
 	{'number', 'number', 'number', 'number', 'string', timing = 'string', ease = 'function', pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease}, -- ease mod
-	{'number', 'number', 'string', 'number', 'number', timing = 'string', ease = 'function', pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease_r}, -- another ease mod
+	{'number', 'number', 'string', 'number', 'number', timing = 'string', ease = 'function' , pn = {'table', 'number'}, sustain = 'number', sustain_timing = 'string', args = {'number', 'string', 'function', 'table'}, ret = ease_r}, -- another ease mod
 }
 
 function validate(data) -- contains mod data that will be passed into a function dependand on it's need
@@ -424,7 +440,7 @@ applymods = function()
 end
 
 
-
+-- todo restructure for persist / make args more consistant
 add = {
 	mod = function(a, b)
 		if first_seen_beat > a.range[2] then return end
@@ -448,18 +464,17 @@ add = {
 
 	ease = function(a, b)
 		if first_seen_beat > a.range[2] then return end
-		local duration = a.range[2] - a.range[1]
-		local time = math.min(b, a.range[2]) - a.range[1]
-		local percent = a.ease(time, a.percentage[1], a.percentage[2] - a.percentage[1], duration, unpack(a.args))
+		local time = math.min((b - a.range[1]) / (a.range[2] - a.range[1]), 1)
+		local percent = a.percentage[1] + (a.percentage[2] - a.percentage[1]) * a.ease(time, unpack(a.args))
 		local mod = (a[1] == 'xmod' and percent .. 'x') or (a[1] == 'cmod' and 'c' .. percent) or percent .. ' ' .. a[1]
 		addmods('*-1 ' .. mod, a.player)
 	end,
 
 	perfease = function(a, b)
 		if first_seen_beat > a.range[2] then return end
-		local duration = a.range[2] - a.range[1]
-		local time = math.min(b, a.range[2]) - a.range[1]
-		local percent = a.ease(time, a.percentage[1], a.percentage[2] - a.percentage[1], duration, unpack(a.args))
+		-- local duration = a.range[2] - a.range[1]
+		local time = math.min((b - a.range[1]) / (a.range[2] - a.range[1]), 1)
+		local percent = a.percentage[1] + (a.percentage[2] - a.percentage[1]) * a.ease(time, unpack(a.args))
 		a[1]({value = percent, beat = b}, a.func_args)
 	end
 
@@ -495,7 +510,10 @@ function update()
 	end
 end
 
+local already_set = false
 function set()
+	if already_set then return end
+	already_set = true
 	-- name players, judgment, combo and notefield
 	-- prefix.players[<pn>].<element> to grab players, judgment, combo, and NoteField
 	-- prefix.origins[<pn>].<element>.<origin> to grab the original value of <origin> at beat 0
@@ -577,12 +595,12 @@ function set()
 		end
 	end
 
-	a()
+	a = a and a()
 
 	for i, v in pairs(mods) do
 		v.iter = i
 	end
-
+	spellcard.send()
 	table.sort(mods, function(a, b) return a.range[1] == b.range[1] and (a.iter < b.iter) or (a.range[1] < b.range[1]) end)
 	assert(GAMESTATE:IsEditMode() or not debug(), exit('ASSERT: Debug was left enabled'))
 end
@@ -603,5 +621,5 @@ end"
 	<Layer File="./easing.xml"/>
 	<Layer File="./modhelpers.xml"/>
 	<Layer File="./modhelpers_vintage.xml"/>
-	<Layer File="../lua/spellcards.xml"/>
+	<Layer File="./spellcards.xml"/>
 </children></Layer>

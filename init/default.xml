@@ -2,7 +2,7 @@
 	if not _G.________init then _G.________init = 'fg' end
 	self:sleep(9E9)
 end"><children>
-	<Layer Condition="_G.________init == 'fg'" File="../init.xml"/> <!-- load this if fg is loaded first -->
+	<Layer Condition="_G.________init == 'fg'" File="./init.xml"/> <!-- load this if fg is loaded first -->
 
 	<Layer File="../lua/mods.xml"/>
 	<Layer Condition="_G.________init == 'bg' and m_prefix.reset()"/> <!-- unload if bg is loaded first -->
